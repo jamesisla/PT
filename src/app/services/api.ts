@@ -1,6 +1,9 @@
 import { Pet, petsDatabase } from '../data/petData';
 
-const BASE_URL = 'http://localhost:8000/api';
+const BASE_URL = typeof window !== 'undefined' 
+  ? `http://${window.location.hostname}:8000/api` 
+  : 'http://localhost:8000/api';
+
 
 export async function getPetsList(): Promise<any[]> {
   try {
