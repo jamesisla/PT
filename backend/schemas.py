@@ -22,11 +22,13 @@ class AlertaSchema(CamelModel):
     titulo: str
     descripcion: str
     estado: str = "activa"
+    fecha: Optional[str] = None
 
 class AlertaCreate(BaseModel):
     tipo: str
     titulo: str
     descripcion: str
+    fecha: Optional[str] = None
 
 class DiagnosticoSchema(CamelModel):
     id: int
@@ -65,7 +67,7 @@ class VacunaCreate(BaseModel):
     lote: Optional[str] = "N/A"
     veterinario: Optional[str] = "Dr. Veterinario Externo"
     proxima_fecha: Optional[str] = "No programada"
-    estado: Optional[str] = "Applied"
+    estado: Optional[str] = "Aplicada"
     estado_color: Optional[str] = "bg-green-100 text-green-700"
 
 class DesparasitacionSchema(CamelModel):

@@ -29,17 +29,27 @@ export default function Vacunas({ vacunas, onBack, onUpdateVaccine, onDeleteVacc
     setEditEstado(vac.estado === 'Applied' ? 'Aplicada' : vac.estado);
   };
 
+  const ensureESDate = (str: string) => {
+    if (!str) return '';
+    const trimmed = str.trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      const [y, m, d] = trimmed.split('-');
+      return `${d}/${m}/${y}`;
+    }
+    return trimmed;
+  };
+
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editNombre) return;
 
     onUpdateVaccine(editingVacuna.id, {
-      fecha: editFecha,
+      fecha: ensureESDate(editFecha),
       nombre: editNombre,
       lote: editLote,
       veterinario: editVeterinario,
       proximaFecha: editProximaFecha,
-      estado: editEstado === 'Aplicada' ? 'Applied' : editEstado,
+      estado: editEstado,
       estadoColor: 
         editEstado === 'Aplicada' 
           ? 'bg-green-100 text-green-700' 

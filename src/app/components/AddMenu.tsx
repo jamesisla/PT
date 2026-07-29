@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { ClipboardList, Scale, Syringe, Calendar, Bell, X, Check, Pill, Stethoscope, Bug, FlaskConical, Image as ImageIcon } from 'lucide-react';
 
 interface AddMenuProps {
@@ -68,6 +68,74 @@ export default function AddMenu({ onClose, onAddRecord, initialOption = null }: 
   const [imgUrl, setImgUrl] = useState('');
 
   const [showSuccess, setShowSuccess] = useState(false);
+
+  const [customDate, setCustomDate] = useState(() => {
+    const today = new Date();
+    const offset = today.getTimezoneOffset();
+    const localToday = new Date(today.getTime() - (offset * 60 * 1000));
+    return localToday.toISOString().split('T')[0];
+  });
+
+  const formatToESDate = (dateStr: string) => {
+    if (!dateStr) return '';
+    const [year, month, day] = dateStr.split('-');
+    return `${day}/${month}/${year}`;
+  };
+
+  const formatWeightDate = (dateStr: string) => {
+    if (!dateStr) return '';
+    const [year, month, day] = dateStr.split('-');
+    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const monthIndex = parseInt(month, 10) - 1;
+    const shortYear = year.slice(-2);
+    return `${months[monthIndex]} ${shortYear}`;
+  };
+
+  function CustomDatePicker({ value, onChange, label, isWeight }: { value: string; onChange: (val: string) => void; label: string; isWeight?: boolean }) {
+    const dateInputRef = useRef<HTMLInputElement>(null);
+
+    const displayValue = isWeight ? formatWeightDate(value) : formatToESDate(value);
+
+    const triggerCalendar = () => {
+      if (dateInputRef.current) {
+        if (typeof dateInputRef.current.showPicker === 'function') {
+          try {
+            dateInputRef.current.showPicker();
+          } catch {
+            dateInputRef.current.focus();
+          }
+        } else {
+          dateInputRef.current.focus();
+        }
+      }
+    };
+
+    return (
+      <div className="space-y-1">
+        <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">
+          {label}
+        </label>
+        <div 
+          onClick={triggerCalendar}
+          className="relative flex items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 cursor-pointer hover:border-[#00AEEF] transition-colors group"
+        >
+          <span className="text-xs font-black text-gray-800 flex-1">
+            {displayValue} <span className="text-[10px] font-semibold text-[#00AEEF] ml-1.5">(DD/MM/YYYY)</span>
+          </span>
+          <Calendar className="w-4 h-4 text-[#00AEEF] group-hover:scale-110 transition-transform" />
+          <input 
+            ref={dateInputRef}
+            type="date" 
+            value={value}
+            onChange={e => {
+              if (e.target.value) onChange(e.target.value);
+            }}
+            className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+          />
+        </div>
+      </div>
+    );
+  }
 
   const options = [
     {
@@ -139,7 +207,7 @@ export default function AddMenu({ onClose, onAddRecord, initialOption = null }: 
     e.preventDefault();
     
     let record: any = {};
-    const dateStr = new Date().toLocaleDateString('es-ES');
+    const dateStr = formatToESDate(customDate);
 
     if (selectedOption === 'sintoma') {
       if (!sintoma) return;
@@ -153,7 +221,7 @@ export default function AddMenu({ onClose, onAddRecord, initialOption = null }: 
     } else if (selectedOption === 'peso') {
       if (!peso) return;
       record = {
-        fecha: new Date().toLocaleDateString('es-ES', { month: 'short', year: '2-digit' }).replace('.', ''),
+        fecha: formatWeightDate(customDate),
         peso: parseFloat(peso)
       };
     } else if (selectedOption === 'vacuna') {
@@ -165,13 +233,14 @@ export default function AddMenu({ onClose, onAddRecord, initialOption = null }: 
         lote: vacunaLote || 'N/A',
         veterinario: 'Dr. Veterinario Externo',
         proximaFecha: vacunaProxima || 'No programada',
-        estado: 'Applied',
+        estado: 'Aplicada',
         estadoColor: 'bg-green-100 text-green-700'
       };
     } else if (selectedOption === 'alerta') {
       if (!alertaTitulo) return;
       record = {
         id: 'al_' + Date.now(),
+        fecha: dateStr,
         tipo: alertaTipo,
         titulo: alertaTitulo.toUpperCase(),
         descripcion: alertaDesc
@@ -276,6 +345,12 @@ export default function AddMenu({ onClose, onAddRecord, initialOption = null }: 
               <h3 className="font-extrabold text-gray-900 text-base">Registrar Laboratorio</h3>
               <button type="button" onClick={() => setSelectedOption(null)} className="text-xs text-[#00AEEF] font-bold">Atrás</button>
             </div>
+            
+            <CustomDatePicker 
+              value={customDate} 
+              onChange={setCustomDate} 
+              label="Fecha del Examen" 
+            />
             
             <div className="space-y-1">
               <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Nombre del Examen</label>
@@ -477,6 +552,12 @@ export default function AddMenu({ onClose, onAddRecord, initialOption = null }: 
               <button type="button" onClick={() => setSelectedOption(null)} className="text-xs text-[#00AEEF] font-bold">Atrás</button>
             </div>
 
+            <CustomDatePicker 
+              value={customDate} 
+              onChange={setCustomDate} 
+              label="Fecha del Registro" 
+            />
+
             <div className="space-y-1">
               <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Tipo de Estudio</label>
               <div className="flex gap-2">
@@ -565,6 +646,12 @@ export default function AddMenu({ onClose, onAddRecord, initialOption = null }: 
               <h3 className="font-extrabold text-gray-900 text-base">Registrar Desparasitación</h3>
               <button type="button" onClick={() => setSelectedOption(null)} className="text-xs text-[#00AEEF] font-bold">Atrás</button>
             </div>
+
+            <CustomDatePicker 
+              value={customDate} 
+              onChange={setCustomDate} 
+              label="Fecha de Aplicación" 
+            />
             
             <div className="space-y-1">
               <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Tipo de Desparasitación</label>
@@ -657,6 +744,12 @@ export default function AddMenu({ onClose, onAddRecord, initialOption = null }: 
               <h3 className="font-extrabold text-gray-900 text-base">Registrar Consulta</h3>
               <button type="button" onClick={() => setSelectedOption(null)} className="text-xs text-[#00AEEF] font-bold">Atrás</button>
             </div>
+
+            <CustomDatePicker 
+              value={customDate} 
+              onChange={setCustomDate} 
+              label="Fecha de Consulta" 
+            />
             
             <div className="space-y-1">
               <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Tipo de Consulta</label>
@@ -743,6 +836,12 @@ export default function AddMenu({ onClose, onAddRecord, initialOption = null }: 
               <h3 className="font-extrabold text-gray-900 text-base">Registrar Tratamiento</h3>
               <button type="button" onClick={() => setSelectedOption(null)} className="text-xs text-[#00AEEF] font-bold">Atrás</button>
             </div>
+
+            <CustomDatePicker 
+              value={customDate} 
+              onChange={setCustomDate} 
+              label="Fecha de Inicio" 
+            />
             
             <div className="space-y-1">
               <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Nombre del Medicamento</label>
@@ -814,6 +913,12 @@ export default function AddMenu({ onClose, onAddRecord, initialOption = null }: 
               <h3 className="font-extrabold text-gray-900 text-base">Registrar Síntoma</h3>
               <button type="button" onClick={() => setSelectedOption(null)} className="text-xs text-[#00AEEF] font-bold">Atrás</button>
             </div>
+
+            <CustomDatePicker 
+              value={customDate} 
+              onChange={setCustomDate} 
+              label="Fecha de Observación" 
+            />
             
             <div className="space-y-1">
               <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Síntoma o Comportamiento</label>
@@ -874,6 +979,13 @@ export default function AddMenu({ onClose, onAddRecord, initialOption = null }: 
               <h3 className="font-extrabold text-gray-900 text-base">Registrar Peso</h3>
               <button type="button" onClick={() => setSelectedOption(null)} className="text-xs text-[#00AEEF] font-bold">Atrás</button>
             </div>
+
+            <CustomDatePicker 
+              value={customDate} 
+              onChange={setCustomDate} 
+              label="Fecha del Registro" 
+              isWeight
+            />
             
             <div className="space-y-1">
               <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Peso en Kilogramos (kg)</label>
@@ -901,6 +1013,12 @@ export default function AddMenu({ onClose, onAddRecord, initialOption = null }: 
               <h3 className="font-extrabold text-gray-900 text-base">Registrar Vacuna</h3>
               <button type="button" onClick={() => setSelectedOption(null)} className="text-xs text-[#00AEEF] font-bold">Atrás</button>
             </div>
+
+            <CustomDatePicker 
+              value={customDate} 
+              onChange={setCustomDate} 
+              label="Fecha de Inoculación" 
+            />
             
             <div className="space-y-1">
               <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Nombre de Vacuna</label>
@@ -950,6 +1068,12 @@ export default function AddMenu({ onClose, onAddRecord, initialOption = null }: 
               <h3 className="font-extrabold text-gray-900 text-base">Agendar Recordatorio</h3>
               <button type="button" onClick={() => setSelectedOption(null)} className="text-xs text-[#00AEEF] font-bold">Atrás</button>
             </div>
+
+            <CustomDatePicker 
+              value={customDate} 
+              onChange={setCustomDate} 
+              label="Fecha de Programación" 
+            />
             
             <div className="space-y-1">
               <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Título de Alerta / Evento</label>

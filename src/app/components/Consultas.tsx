@@ -57,12 +57,22 @@ export default function Consultas({ diagnosticos, onBack, onUpdateDiagnosis, onD
     setEditClinica(diag.clinica || 'Hospital Veterinario Sania Pet');
   };
 
+  const ensureESDate = (str: string) => {
+    if (!str) return '';
+    const trimmed = str.trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      const [y, m, d] = trimmed.split('-');
+      return `${d}/${m}/${y}`;
+    }
+    return trimmed;
+  };
+
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editDescripcion) return;
 
     onUpdateDiagnosis(editingDiag.id, {
-      fecha: editFecha,
+      fecha: ensureESDate(editFecha),
       tipo: editTipo,
       tipoColor: 
         editTipo === 'Urgencia' 

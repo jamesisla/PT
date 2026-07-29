@@ -47,6 +47,7 @@ class Alerta(Base):
 
     id = Column(String, primary_key=True, index=True)
     mascota_id = Column(String, ForeignKey("mascotas.id", ondelete="CASCADE"), nullable=False)
+    fecha = Column(String, nullable=True)
     tipo = Column(String)  # 'critica' or 'preventiva'
     titulo = Column(String, nullable=False)
     descripcion = Column(Text)

@@ -17,9 +17,12 @@ export default function DiarioSalud({ diario, onUpdateSymptom, onDeleteSymptom }
   const [editEstado, setEditEstado] = useState<'Normal' | 'Atención' | 'Alerta'>('Normal');
   const [editNota, setEditNota] = useState('');
 
+  const normalizeStr = (str: string) => 
+    (str || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
   const filteredLogs = diario.filter((log) => {
     if (filter === 'todos') return true;
-    return log.estado.toLowerCase() === filter;
+    return normalizeStr(log.estado) === normalizeStr(filter);
   });
 
   const handleStartEdit = (log: any) => {

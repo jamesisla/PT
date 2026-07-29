@@ -3,6 +3,7 @@ export interface Alerta {
   tipo: 'critica' | 'preventiva';
   titulo: string;
   descripcion: string;
+  fecha?: string;
 }
 
 export interface Diagnostico {
@@ -205,7 +206,7 @@ export const petsDatabase: Record<string, Pet> = {
         lote: 'RAB-9923B',
         veterinario: 'Dra. Sandra Valenzuela',
         proximaFecha: '15/07/2026',
-        estado: 'Applied' as any, // We map to Applied/Vencida/Pendiente
+        estado: 'Aplicada',
         estadoColor: 'bg-green-100 text-green-700'
       },
       {
@@ -215,7 +216,7 @@ export const petsDatabase: Record<string, Pet> = {
         lote: 'SEX-8840A',
         veterinario: 'Dra. Sandra Valenzuela',
         proximaFecha: '12/03/2027',
-        estado: 'Applied' as any,
+        estado: 'Aplicada',
         estadoColor: 'bg-green-100 text-green-700'
       },
       {
@@ -225,7 +226,7 @@ export const petsDatabase: Record<string, Pet> = {
         lote: 'KC-7721C',
         veterinario: 'Dr. Roberto Cáceres',
         proximaFecha: '05/11/2026',
-        estado: 'Applied' as any,
+        estado: 'Aplicada',
         estadoColor: 'bg-green-100 text-green-700'
       }
     ],
@@ -346,10 +347,6 @@ export const petsDatabase: Record<string, Pet> = {
       { fecha: 'Mar 26', peso: 12.1 },
       { fecha: 'May 26', peso: 12.4 }
     ],
-    diary: [
-      { id: 1, fecha: '22/06/2026', sintoma: 'Buen apetito', estado: 'Normal', nota: 'Comió todo su alimento habitual y anduvo con bastante energía.' },
-      { id: 2, fecha: '18/06/2026', sintoma: 'Prurito leve en oreja derecha', estado: 'Atención', nota: 'Se rascó un par de veces por la tarde, pero el canal auditivo se ve limpio y seco.' }
-    ] as any,
     diario: [
       { id: 1, fecha: '22/06/2026', sintoma: 'Buen apetito', estado: 'Normal', nota: 'Comió todo su alimento habitual y anduvo con bastante energía.' },
       { id: 2, fecha: '18/06/2026', sintoma: 'Prurito leve en oreja derecha', estado: 'Atención', nota: 'Se rascó un par de veces por la tarde, pero el canal auditivo se ve limpio y seco.' }
@@ -415,7 +412,7 @@ export const petsDatabase: Record<string, Pet> = {
         lote: 'TF-2212E',
         veterinario: 'Dr. Francisco Muñoz',
         proximaFecha: '10/09/2026',
-        estado: 'Applied' as any,
+        estado: 'Aplicada',
         estadoColor: 'bg-green-100 text-green-700'
       },
       {
@@ -425,7 +422,7 @@ export const petsDatabase: Record<string, Pet> = {
         lote: 'RAB-FEL-92A',
         veterinario: 'Dr. Francisco Muñoz',
         proximaFecha: '10/09/2026',
-        estado: 'Applied' as any,
+        estado: 'Aplicada',
         estadoColor: 'bg-green-100 text-green-700'
       },
       {
@@ -435,7 +432,7 @@ export const petsDatabase: Record<string, Pet> = {
         lote: 'LF-3401D',
         veterinario: 'Dra. Sandra Valenzuela',
         proximaFecha: '15/10/2025',
-        estado: 'Vencida' as any,
+        estado: 'Vencida',
         estadoColor: 'bg-red-100 text-red-700'
       }
     ],
@@ -511,13 +508,9 @@ export const petsDatabase: Record<string, Pet> = {
       { fecha: 'Oct 25', peso: 4.5 },
       { fecha: 'Nov 25', peso: 4.6 },
       { fecha: 'Dic 25', peso: 4.4 },
-      { fecha: 'Feb 26', peso: 4.6 },
+      { fecha: 'Ene 26', peso: 4.6 },
       { fecha: 'Abr 26', peso: 4.8 }
     ],
-    diary: [
-      { id: 1, fecha: '22/06/2026', sintoma: 'Micción normal', estado: 'Normal', nota: 'Fue a su caja de arena dos veces, orinando volumen normal sin quejarse.' },
-      { id: 2, fecha: '21/06/2026', sintoma: 'Apetito caprichoso', estado: 'Atención', nota: 'No se comió todo el alimento húmedo por la mañana, pero terminó el seco de noche.' }
-    ] as any,
     diario: [
       { id: 1, fecha: '22/06/2026', sintoma: 'Micción normal', estado: 'Normal', nota: 'Fue a su caja de arena dos veces, orinando volumen normal sin quejarse.' },
       { id: 2, fecha: '21/06/2026', sintoma: 'Apetito caprichoso', estado: 'Atención', nota: 'No se comió todo el alimento húmedo por la mañana, pero terminó el seco de noche.' }

@@ -37,8 +37,15 @@ export default function LaboratoriosDetalle({ pet, labId, onBack, onUpdateLabora
 
   if (!data) {
     return (
-      <div className="flex-1 p-6 text-center text-gray-500">
-        No se encontró el examen seleccionado.
+      <div className="flex-1 p-6 text-center space-y-4">
+        <button
+          onClick={onBack}
+          className="inline-flex items-center gap-2 text-gray-600 bg-white px-4 py-2 rounded-xl border border-gray-200 font-bold text-xs shadow-sm hover:bg-gray-50 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Volver al Historial</span>
+        </button>
+        <p className="text-gray-500 font-semibold text-sm">No se encontró el examen seleccionado.</p>
       </div>
     );
   }

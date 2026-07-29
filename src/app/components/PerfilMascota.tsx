@@ -91,12 +91,12 @@ export default function PerfilMascota({ pet, onUpdatePetProfile, onUpdatePetOwne
   return (
     <div className="flex-1 overflow-auto pb-24 bg-gray-50/50">
       {/* Cover Profile Header */}
-      <div className="bg-gradient-to-r from-[#00AEEF] to-[#1A5AD7] pt-6 pb-20 px-5 text-white shadow-md relative rounded-b-[40px]">
+      <div className="bg-gradient-to-r from-[#00AEEF] to-[#1A5AD7] pt-3 pb-8 px-5 text-white shadow-md relative rounded-b-[40px]">
         <h1 className="text-xl font-black text-center tracking-wide">Perfil de Mascota</h1>
       </div>
 
       {/* Profile Card Floating Over Header */}
-      <div className="px-5 -mt-16 space-y-6">
+      <div className="px-5 -mt-6 space-y-6">
         <div className="bg-white rounded-3xl p-5 shadow-md border border-gray-100 flex flex-col items-center text-center">
           <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gray-50 mb-2">
             <img 

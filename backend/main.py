@@ -112,6 +112,7 @@ def add_alert(pet_id: str, alert: schemas.AlertaCreate, db: Session = Depends(ge
     db_record = models.Alerta(
         id=alert_id,
         mascota_id=pet_id,
+        fecha=alert.fecha,
         tipo=alert.tipo,
         titulo=alert.titulo.upper(),
         descripcion=alert.descripcion
