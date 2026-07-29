@@ -3,6 +3,7 @@ import { Pet } from './data/petData';
 import { 
   getPetsList, 
   getPetDetail, 
+  createNewPet,
   addSymptomRecord, 
   addWeightRecord, 
   addVaccineRecord, 
@@ -43,6 +44,7 @@ import ImagenesMedicas from './components/ImagenesMedicas';
 import DiarioSalud from './components/DiarioSalud';
 import PerfilMascota from './components/PerfilMascota';
 import AddMenu from './components/AddMenu';
+import AddPetModal from './components/AddPetModal';
 import MapetServicios from './components/MapetServicios';
 import { AlertTriangle, Bell, Info, Clock, Check, Trash2, X } from 'lucide-react';
 
@@ -54,6 +56,7 @@ export default function App() {
   const [activeScreen, setActiveScreen] = useState<string | null>(null);
   const [selectedLabId, setSelectedLabId] = useState<string | null>(null);
   const [showAddMenu, setShowAddMenu] = useState(false);
+  const [showAddPetModal, setShowAddPetModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedAlertForAction, setSelectedAlertForAction] = useState<any | null>(null);
 
@@ -107,6 +110,19 @@ export default function App() {
     setActivePetId(petId);
     setActiveScreen(null);
     setActiveTab('home');
+  };
+
+  const handleAddPet = async (petData: any) => {
+    try {
+      const created = await createNewPet(petData);
+      const list = await getPetsList();
+      setPetsList(list);
+      setActivePetId(created.id);
+      setActiveScreen(null);
+      setActiveTab('home');
+    } catch (err) {
+      console.error('Error creating pet', err);
+    }
   };
 
   const handleAddRecord = async (type: string, record: any) => {
@@ -546,6 +562,7 @@ export default function App() {
           activePet={activePet} 
           allPets={petsList.length > 0 ? petsList : [activePet]} 
           onSelectPet={handleSelectPet}
+          onOpenAddPet={() => setShowAddPetModal(true)}
           onOpenSettings={() => alert('Configuración: Simulación de ajustes.')}
         />
         
@@ -559,6 +576,13 @@ export default function App() {
           alertCount={activePet.alertas ? activePet.alertas.filter(a => !a.estado || a.estado === 'activa').length : 0}
         />
         
+        {showAddPetModal && (
+          <AddPetModal 
+            onClose={() => setShowAddPetModal(false)}
+            onAddPet={handleAddPet}
+          />
+        )}
+
         {showAddMenu && (
           <AddMenu 
             onClose={() => setShowAddMenu(false)} 

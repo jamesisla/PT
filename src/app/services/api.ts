@@ -715,3 +715,59 @@ export async function deleteMedicalImageRecord(petId: string, imageId: number): 
   }
 }
 
+export async function createNewPet(newPetData: any): Promise<Pet> {
+  const newId = newPetData.nombre.toLowerCase().trim().replace(/\s+/g, '_') + '_' + Date.now().toString(36);
+  
+  const defaultFoto = newPetData.especie?.toLowerCase() === 'gato'
+    ? 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&q=80&w=300&h=300'
+    : 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=300&h=300';
+
+  const fullPet: Pet = {
+    id: newId,
+    nombre: newPetData.nombre,
+    especie: newPetData.especie || 'Perro',
+    raza: newPetData.raza || 'Mestizo',
+    edad: newPetData.edad || '1 año',
+    sexo: newPetData.sexo || 'Macho (Esterilizado)',
+    pesoActual: newPetData.pesoActual ? `${newPetData.pesoActual} kg` : '0 kg',
+    fechaNacimiento: newPetData.fechaNacimiento || '01/01/2025',
+    microchip: newPetData.microchip || 'No registrado',
+    foto: newPetData.foto || defaultFoto,
+    seguro: newPetData.seguro || 'Sin seguro registrado',
+    clinicaFrecuente: newPetData.clinicaFrecuente || 'Hospital Veterinario Sania Pet',
+    propietario: {
+      nombre: newPetData.propietarioNombre || 'Dueño Registrado',
+      rut: 'N/A',
+      telefono: newPetData.propietarioTelefono || '+56 9 1234 5678',
+      email: newPetData.propietarioEmail || 'contacto@saniapet.cl',
+      direccion: 'Santiago, Chile'
+    },
+    alertas: [],
+    diagnosticos: [],
+    vacunas: [],
+    desparasitaciones: [],
+    medicamentos: [],
+    laboratorios: [],
+    imagenes: [],
+    pesoHistorial: newPetData.pesoActual ? [{ fecha: 'Actual', peso: parseFloat(newPetData.pesoActual) }] : [],
+    diario: []
+  };
+
+  try {
+    const res = await fetch(`${BASE_URL}/pets`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(fullPet),
+    });
+    if (!res.ok) throw new Error('API error');
+  } catch (err) {
+    console.warn('FastAPI backend unreachable. Saving new pet to local database.');
+  }
+
+  petsDatabase[newId] = fullPet;
+  savePetsDatabase();
+  return fullPet;
+}
+
