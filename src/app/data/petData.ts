@@ -128,7 +128,7 @@ export interface Pet {
   diario: DiarioRegistro[];
 }
 
-export const petsDatabase: Record<string, Pet> = {
+export const initialPetsDatabase: Record<string, Pet> = {
   luna: {
     id: 'luna',
     nombre: 'Luna',
@@ -517,3 +517,31 @@ export const petsDatabase: Record<string, Pet> = {
     ]
   }
 };
+
+const LOCAL_STORAGE_KEY = 'saniapet_pets_database_v1';
+
+export function loadPetsDatabase(): Record<string, Pet> {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (e) {
+      console.warn('Error loading petsDatabase from localStorage:', e);
+    }
+  }
+  return initialPetsDatabase;
+}
+
+export const petsDatabase: Record<string, Pet> = loadPetsDatabase();
+
+export function savePetsDatabase(): void {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(petsDatabase));
+    } catch (e) {
+      console.warn('Error saving petsDatabase to localStorage:', e);
+    }
+  }
+}

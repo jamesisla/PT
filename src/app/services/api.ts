@@ -1,4 +1,4 @@
-import { Pet, petsDatabase } from '../data/petData';
+import { Pet, petsDatabase, savePetsDatabase } from '../data/petData';
 
 const BASE_URL = typeof window !== 'undefined' 
   ? `http://${window.location.hostname}:8000/api` 
@@ -54,6 +54,7 @@ export async function addSymptomRecord(petId: string, record: any): Promise<any>
     console.warn('FastAPI backend unreachable. Saving record to local memory state.');
     if (petsDatabase[petId]) {
       petsDatabase[petId].diario = [record, ...petsDatabase[petId].diario];
+      savePetsDatabase();
     }
     return record;
   }
@@ -78,6 +79,7 @@ export async function addWeightRecord(petId: string, record: any): Promise<any> 
     if (petsDatabase[petId]) {
       petsDatabase[petId].pesoActual = `${record.peso} kg`;
       petsDatabase[petId].pesoHistorial = [...petsDatabase[petId].pesoHistorial, record];
+      savePetsDatabase();
     }
     return record;
   }
@@ -106,6 +108,7 @@ export async function addVaccineRecord(petId: string, record: any): Promise<any>
     console.warn('FastAPI backend unreachable. Saving record to local memory state.');
     if (petsDatabase[petId]) {
       petsDatabase[petId].vacunas = [record, ...petsDatabase[petId].vacunas];
+      savePetsDatabase();
     }
     return record;
   }
@@ -130,6 +133,7 @@ export async function addAlertRecord(petId: string, record: any): Promise<any> {
     console.warn('FastAPI backend unreachable. Saving record to local memory state.');
     if (petsDatabase[petId]) {
       petsDatabase[petId].alertas = [record, ...petsDatabase[petId].alertas];
+      savePetsDatabase();
     }
     return record;
   }
@@ -148,6 +152,7 @@ export async function updateAlertAction(alertId: string, action: string, petId: 
       const alert = petsDatabase[petId].alertas.find(a => a.id === alertId);
       if (alert) {
         alert.estado = action === 'posponer' ? 'pospuesta' : action === 'solucionar' ? 'solucionada' : 'olvidada';
+        savePetsDatabase();
       }
     }
     return { id: alertId, estado: action };
@@ -176,6 +181,7 @@ export async function updateSymptomRecord(petId: string, sintomaId: number, reco
       const idx = petsDatabase[petId].diario.findIndex(d => d.id === sintomaId);
       if (idx !== -1) {
         petsDatabase[petId].diario[idx] = { ...petsDatabase[petId].diario[idx], ...record };
+        savePetsDatabase();
       }
     }
     return record;
@@ -193,6 +199,7 @@ export async function deleteSymptomRecord(petId: string, sintomaId: number): Pro
     console.warn('FastAPI backend unreachable. Deleting record from local memory.');
     if (petsDatabase[petId]) {
       petsDatabase[petId].diario = petsDatabase[petId].diario.filter(d => d.id !== sintomaId);
+      savePetsDatabase();
     }
     return { status: 'success' };
   }
@@ -223,6 +230,7 @@ export async function updateVaccineRecord(petId: string, vacunaId: number, recor
       const idx = petsDatabase[petId].vacunas.findIndex(v => v.id === vacunaId);
       if (idx !== -1) {
         petsDatabase[petId].vacunas[idx] = { ...petsDatabase[petId].vacunas[idx], ...record };
+        savePetsDatabase();
       }
     }
     return record;
@@ -240,6 +248,7 @@ export async function deleteVaccineRecord(petId: string, vacunaId: number): Prom
     console.warn('FastAPI backend unreachable. Deleting vaccine from local memory.');
     if (petsDatabase[petId]) {
       petsDatabase[petId].vacunas = petsDatabase[petId].vacunas.filter(v => v.id !== vacunaId);
+      savePetsDatabase();
     }
     return { status: 'success' };
   }
@@ -268,6 +277,7 @@ export async function addMedicationRecord(petId: string, record: any): Promise<a
     console.warn('FastAPI backend unreachable. Saving medication to local memory.');
     if (petsDatabase[petId]) {
       petsDatabase[petId].medicamentos = [record, ...petsDatabase[petId].medicamentos];
+      savePetsDatabase();
     }
     return record;
   }
@@ -298,6 +308,7 @@ export async function updateMedicationRecord(petId: string, medicamentoId: numbe
       const idx = petsDatabase[petId].medicamentos.findIndex(m => m.id === medicamentoId);
       if (idx !== -1) {
         petsDatabase[petId].medicamentos[idx] = { ...petsDatabase[petId].medicamentos[idx], ...record };
+        savePetsDatabase();
       }
     }
     return record;
@@ -315,6 +326,7 @@ export async function deleteMedicationRecord(petId: string, medicamentoId: numbe
     console.warn('FastAPI backend unreachable. Deleting medication from local memory.');
     if (petsDatabase[petId]) {
       petsDatabase[petId].medicamentos = petsDatabase[petId].medicamentos.filter(m => m.id !== medicamentoId);
+      savePetsDatabase();
     }
     return { status: 'success' };
   }
@@ -346,6 +358,7 @@ export async function updatePetProfile(petId: string, petData: any): Promise<any
     console.warn('FastAPI backend unreachable. Updating pet in local memory.');
     if (petsDatabase[petId]) {
       petsDatabase[petId] = { ...petsDatabase[petId], ...petData };
+      savePetsDatabase();
     }
     return petsDatabase[petId];
   }
@@ -372,6 +385,7 @@ export async function updatePetOwner(petId: string, ownerData: any): Promise<any
     console.warn('FastAPI backend unreachable. Updating owner in local memory.');
     if (petsDatabase[petId]) {
       petsDatabase[petId].propietario = { ...petsDatabase[petId].propietario, ...ownerData };
+      savePetsDatabase();
     }
     return petsDatabase[petId].propietario;
   }
@@ -401,6 +415,7 @@ export async function addDiagnosisRecord(petId: string, record: any): Promise<an
     console.warn('FastAPI backend unreachable. Saving diagnosis to local memory.');
     if (petsDatabase[petId]) {
       petsDatabase[petId].diagnosticos = [record, ...petsDatabase[petId].diagnosticos];
+      savePetsDatabase();
     }
     return record;
   }
@@ -432,6 +447,7 @@ export async function updateDiagnosisRecord(petId: string, diagnosticoId: number
       const idx = petsDatabase[petId].diagnosticos.findIndex(d => d.id === diagnosticoId);
       if (idx !== -1) {
         petsDatabase[petId].diagnosticos[idx] = { ...petsDatabase[petId].diagnosticos[idx], ...record };
+        savePetsDatabase();
       }
     }
     return record;
@@ -449,6 +465,7 @@ export async function deleteDiagnosisRecord(petId: string, diagnosticoId: number
     console.warn('FastAPI backend unreachable. Deleting diagnosis from local memory.');
     if (petsDatabase[petId]) {
       petsDatabase[petId].diagnosticos = petsDatabase[petId].diagnosticos.filter(d => d.id !== diagnosticoId);
+      savePetsDatabase();
     }
     return { status: 'success' };
   }
@@ -477,6 +494,7 @@ export async function addDewormingRecord(petId: string, record: any): Promise<an
     console.warn('FastAPI backend unreachable. Saving deworming to local memory.');
     if (petsDatabase[petId]) {
       petsDatabase[petId].desparasitaciones = [record, ...petsDatabase[petId].desparasitaciones];
+      savePetsDatabase();
     }
     return record;
   }
@@ -507,6 +525,7 @@ export async function updateDewormingRecord(petId: string, dewormingId: number, 
       const idx = petsDatabase[petId].desparasitaciones.findIndex(d => d.id === dewormingId);
       if (idx !== -1) {
         petsDatabase[petId].desparasitaciones[idx] = { ...petsDatabase[petId].desparasitaciones[idx], ...record };
+        savePetsDatabase();
       }
     }
     return record;
@@ -524,6 +543,7 @@ export async function deleteDewormingRecord(petId: string, dewormingId: number):
     console.warn('FastAPI backend unreachable. Deleting deworming from local memory.');
     if (petsDatabase[petId]) {
       petsDatabase[petId].desparasitaciones = petsDatabase[petId].desparasitaciones.filter(d => d.id !== dewormingId);
+      savePetsDatabase();
     }
     return { status: 'success' };
   }
@@ -556,6 +576,7 @@ export async function addLaboratoryRecord(petId: string, record: any): Promise<a
     if (petsDatabase[petId]) {
       const newRec = { ...record, id: record.id || Math.random().toString(36).substr(2, 9) };
       petsDatabase[petId].laboratorios = [newRec, ...petsDatabase[petId].laboratorios];
+      savePetsDatabase();
       return newRec;
     }
     return record;
@@ -590,6 +611,7 @@ export async function updateLaboratoryRecord(petId: string, labId: string, recor
       const idx = petsDatabase[petId].laboratorios.findIndex(l => l.id === labId);
       if (idx !== -1) {
         petsDatabase[petId].laboratorios[idx] = { ...petsDatabase[petId].laboratorios[idx], ...record, id: labId };
+        savePetsDatabase();
       }
     }
     return record;
@@ -607,6 +629,7 @@ export async function deleteLaboratoryRecord(petId: string, labId: string): Prom
     console.warn('FastAPI backend unreachable. Deleting laboratory from local memory.');
     if (petsDatabase[petId]) {
       petsDatabase[petId].laboratorios = petsDatabase[petId].laboratorios.filter(l => l.id !== labId);
+      savePetsDatabase();
     }
     return { status: 'success' };
   }
@@ -636,6 +659,7 @@ export async function addMedicalImageRecord(petId: string, record: any): Promise
     if (petsDatabase[petId]) {
       const newRec = { ...record, id: record.id || Math.floor(Math.random() * 100000) };
       petsDatabase[petId].imagenes = [newRec, ...petsDatabase[petId].imagenes];
+      savePetsDatabase();
       return newRec;
     }
     return record;
@@ -667,6 +691,7 @@ export async function updateMedicalImageRecord(petId: string, imageId: number, r
       const idx = petsDatabase[petId].imagenes.findIndex(img => img.id === imageId);
       if (idx !== -1) {
         petsDatabase[petId].imagenes[idx] = { ...petsDatabase[petId].imagenes[idx], ...record, id: imageId };
+        savePetsDatabase();
       }
     }
     return record;
@@ -684,6 +709,7 @@ export async function deleteMedicalImageRecord(petId: string, imageId: number): 
     console.warn('FastAPI backend unreachable. Deleting medical image from local memory.');
     if (petsDatabase[petId]) {
       petsDatabase[petId].imagenes = petsDatabase[petId].imagenes.filter(img => img.id !== imageId);
+      savePetsDatabase();
     }
     return { status: 'success' };
   }
