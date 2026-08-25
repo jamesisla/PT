@@ -5,18 +5,34 @@ import uuid
 
 import models
 import schemas
-from database import get_db
+from database import get_db, engine, Base, SessionLocal
+from seed import seed_database
 
 app = FastAPI(title="Sania Pet Medical Record API")
 
-# Configure CORS to allow requests from Vite dev server
+# Configure CORS to allow requests from any host / OCI IP
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.on_event("startup")
+def on_startup():
+    # Ensure all tables exist
+    Base.metadata.create_all(bind=engine)
+    # Check if empty, populate initial seed
+    db = SessionLocal()
+    try:
+        if db.query(models.Pet).count() == 0:
+            print("Base de datos vacía detectada. Sembrando datos iniciales...")
+            seed_database()
+    except Exception as e:
+        print(f"Error en startup check de base de datos: {e}")
+    finally:
+        db.close()
 
 @app.get("/")
 def read_root():
