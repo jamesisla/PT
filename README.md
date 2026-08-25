@@ -23,7 +23,15 @@ El proyecto está dividido en dos capas totalmente desacopladas que se comunican
 
 ---
 
-## 🛠️ Requisitos e Instalación Rápida
+## 🚀 Despliegue en Producción (OCI con Alpine Linux)
+
+Si vas a desplegar en una máquina virtual de **Oracle Cloud Infrastructure (OCI) con Alpine Linux** corriendo todo de forma **100% nativa (Bare Metal / VM)** para máximo rendimiento, consulta la guía detallada:
+
+👉 **[Guía de Despliegue Nativo en OCI con Alpine Linux (DEPLOY_OCI_ALPINE.md)](./DEPLOY_OCI_ALPINE.md)**
+
+---
+
+## 🛠️ Requisitos e Instalación Local / Docker
 
 Asegúrate de tener instalados **Node.js** (v18 o superior), **Docker** y **Docker Compose**.
 
