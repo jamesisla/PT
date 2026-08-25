@@ -1,4 +1,5 @@
 import { Pet, petsDatabase, savePetsDatabase } from '../data/petData';
+import { Place, LostPet, getLocalPlaces, saveLocalPlaces, getLocalLostPets, saveLocalLostPets } from '../data/mapData';
 
 const BASE_URL = typeof window !== 'undefined' 
   ? `http://${window.location.hostname}:8000/api` 
@@ -770,4 +771,171 @@ export async function createNewPet(newPetData: any): Promise<Pet> {
   savePetsDatabase();
   return fullPet;
 }
+
+// --- MAPET SERVICIOS & MASCOTAS PERDIDAS ---
+
+export async function getServicios(categoria?: string): Promise<Place[]> {
+  try {
+    const url = categoria && categoria !== 'todos'
+      ? `${BASE_URL}/servicios?categoria=${encodeURIComponent(categoria)}`
+      : `${BASE_URL}/servicios`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('API error');
+    return await res.json();
+  } catch (err) {
+    console.warn('FastAPI backend unreachable. Using local places data.');
+    const places = getLocalPlaces();
+    if (categoria && categoria !== 'todos') {
+      return places.filter(p => p.categoria === categoria);
+    }
+    return places;
+  }
+}
+
+export async function createServicio(serviceData: Partial<Place>): Promise<Place> {
+  const newId = Date.now();
+  const fullService: Place = {
+    id: serviceData.id || newId,
+    nombre: serviceData.nombre || 'Nuevo Servicio',
+    categoria: serviceData.categoria || 'veterinaria',
+    subtipo: serviceData.subtipo || 'Servicio para Mascotas',
+    rating: serviceData.rating || 5.0,
+    reviews: serviceData.reviews || 0,
+    direccion: serviceData.direccion || 'Santiago, Chile',
+    telefono: serviceData.telefono || '',
+    whatsapp: serviceData.whatsapp || '',
+    tarifa: serviceData.tarifa || 'Consultar',
+    horario: serviceData.horario || 'Horario a consultar',
+    lat: serviceData.lat || -33.4265,
+    lng: serviceData.lng || -70.6120,
+    descripcion: serviceData.descripcion || '',
+    imagenUrl: serviceData.imagenUrl || 'https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?auto=format&fit=crop&q=80&w=400&h=300'
+  };
+
+  try {
+    const res = await fetch(`${BASE_URL}/servicios`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(fullService)
+    });
+    if (!res.ok) throw new Error('API error');
+    const created = await res.json();
+    // Update local cache
+    const current = getLocalPlaces();
+    saveLocalPlaces([created, ...current]);
+    return created;
+  } catch (err) {
+    console.warn('FastAPI backend unreachable. Saving service locally.');
+    const current = getLocalPlaces();
+    const updated = [fullService, ...current];
+    saveLocalPlaces(updated);
+    return fullService;
+  }
+}
+
+export async function getMascotasPerdidas(estado?: string): Promise<LostPet[]> {
+  try {
+    const url = estado && estado !== 'todos'
+      ? `${BASE_URL}/mascotas-perdidas?estado=${encodeURIComponent(estado)}`
+      : `${BASE_URL}/mascotas-perdidas`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('API error');
+    return await res.json();
+  } catch (err) {
+    console.warn('FastAPI backend unreachable. Using local lost pets data.');
+    const list = getLocalLostPets();
+    if (estado && estado !== 'todos') {
+      return list.filter(p => p.estado === estado);
+    }
+    return list;
+  }
+}
+
+export async function reportarMascotaPerdida(reporteData: Partial<LostPet>): Promise<LostPet> {
+  const newId = Date.now();
+  const fullReport: LostPet = {
+    id: reporteData.id || newId,
+    mascotaId: reporteData.mascotaId || null,
+    nombreMascota: reporteData.nombreMascota || 'Mascota Extraviada',
+    especie: reporteData.especie || 'Perro',
+    raza: reporteData.raza || 'Mestizo',
+    color: reporteData.color || 'No especificado',
+    foto: reporteData.foto || 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=400&h=400',
+    fechaExtravio: reporteData.fechaExtravio || 'Hoy',
+    lat: reporteData.lat || -33.4265,
+    lng: reporteData.lng || -70.6120,
+    direccionReferencia: reporteData.direccionReferencia || 'Sector sin especificar',
+    recompensa: reporteData.recompensa || '',
+    contactoNombre: reporteData.contactoNombre || 'Dueño/a',
+    contactoTelefono: reporteData.contactoTelefono || '+56 9 1234 5678',
+    contactoWhatsapp: reporteData.contactoWhatsapp || '',
+    descripcion: reporteData.descripcion || '',
+    estado: reporteData.estado || 'perdida',
+    radioMetros: reporteData.radioMetros || 300,
+    createdAt: new Date().toISOString()
+  };
+
+  try {
+    const res = await fetch(`${BASE_URL}/mascotas-perdidas`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(fullReport)
+    });
+    if (!res.ok) throw new Error('API error');
+    const created = await res.json();
+    const current = getLocalLostPets();
+    saveLocalLostPets([created, ...current]);
+    return created;
+  } catch (err) {
+    console.warn('FastAPI backend unreachable. Saving lost pet report locally.');
+    const current = getLocalLostPets();
+    const updated = [fullReport, ...current];
+    saveLocalLostPets(updated);
+    return fullReport;
+  }
+}
+
+export async function updateEstadoMascotaPerdida(reporteId: number, estado: 'perdida' | 'avistada' | 'encontrada'): Promise<LostPet | null> {
+  try {
+    const res = await fetch(`${BASE_URL}/mascotas-perdidas/${reporteId}/estado`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ estado })
+    });
+    if (!res.ok) throw new Error('API error');
+    const updated = await res.json();
+    const current = getLocalLostPets();
+    const newLost = current.map(p => p.id === reporteId ? { ...p, estado } : p);
+    saveLocalLostPets(newLost);
+    return updated;
+  } catch (err) {
+    console.warn('FastAPI backend unreachable. Updating lost pet state locally.');
+    const current = getLocalLostPets();
+    let updatedItem: LostPet | null = null;
+    const newLost = current.map(p => {
+      if (p.id === reporteId) {
+        updatedItem = { ...p, estado };
+        return updatedItem;
+      }
+      return p;
+    });
+    saveLocalLostPets(newLost);
+    return updatedItem;
+  }
+}
+
+export async function deleteMascotaPerdida(reporteId: number): Promise<boolean> {
+  try {
+    const res = await fetch(`${BASE_URL}/mascotas-perdidas/${reporteId}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('API error');
+  } catch (err) {
+    console.warn('FastAPI backend unreachable. Deleting lost pet locally.');
+  }
+  const current = getLocalLostPets();
+  saveLocalLostPets(current.filter(p => p.id !== reporteId));
+  return true;
+}
+
 

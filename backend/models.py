@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Numeric, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, Numeric, Float, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -183,3 +183,46 @@ class DiarioRegistro(Base):
     nota = Column(Text)
 
     pet = relationship("Pet", back_populates="diario")
+
+class Servicio(Base):
+    __tablename__ = "servicios_pet"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    nombre = Column(String, nullable=False)
+    categoria = Column(String, nullable=False)  # 'veterinaria', 'tienda', 'alimento', 'paseador', 'cuidador', 'hotel', 'petfriendly'
+    subtipo = Column(String)
+    rating = Column(Float, default=5.0)
+    reviews = Column(Integer, default=0)
+    direccion = Column(String, nullable=False)
+    telefono = Column(String)
+    whatsapp = Column(String)
+    tarifa = Column(String)
+    horario = Column(String)
+    lat = Column(Float, nullable=False)
+    lng = Column(Float, nullable=False)
+    descripcion = Column(Text)
+    imagen_url = Column(String)
+
+class MascotaPerdida(Base):
+    __tablename__ = "mascotas_perdidas"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    mascota_id = Column(String, nullable=True)  # Referencia opcional a Pet si está registrada
+    nombre_mascota = Column(String, nullable=False)
+    especie = Column(String, nullable=False)
+    raza = Column(String)
+    color = Column(String)
+    foto = Column(String)
+    fecha_extravio = Column(String, nullable=False)
+    lat = Column(Float, nullable=False)
+    lng = Column(Float, nullable=False)
+    direccion_referencia = Column(String, nullable=False)
+    recompensa = Column(String)
+    contacto_nombre = Column(String, nullable=False)
+    contacto_telefono = Column(String, nullable=False)
+    contacto_whatsapp = Column(String)
+    descripcion = Column(Text)
+    estado = Column(String, default="perdida")  # 'perdida', 'avistada', 'encontrada'
+    radio_metros = Column(Integer, default=300)
+    created_at = Column(String)
+

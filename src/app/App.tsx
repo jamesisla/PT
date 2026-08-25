@@ -126,6 +126,11 @@ export default function App() {
   };
 
   const handleAddRecord = async (type: string, record: any) => {
+    if (type === 'mascota-perdida') {
+      setActiveScreen('mapet-servicios-sos');
+      return;
+    }
+
     if (!activePet) return;
 
     try {
@@ -454,7 +459,26 @@ export default function App() {
     }
 
     if (activeScreen === 'mapet-servicios') {
-      return <MapetServicios onBack={handleBack} />;
+      return (
+        <MapetServicios 
+          onBack={handleBack}
+          activePet={activePet}
+          allPets={petsList.length > 0 ? petsList : (activePet ? [activePet] : [])}
+          initialMode="servicios"
+        />
+      );
+    }
+
+    if (activeScreen === 'mapet-servicios-sos') {
+      return (
+        <MapetServicios 
+          onBack={handleBack}
+          activePet={activePet}
+          allPets={petsList.length > 0 ? petsList : (activePet ? [activePet] : [])}
+          initialMode="sos"
+          openReportModalOnMount={true}
+        />
+      );
     }
 
     if (activeScreen === 'alertas-detalle') {

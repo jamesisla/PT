@@ -277,6 +277,166 @@ def seed_database():
             models.DiarioRegistro(mascota_id="max", fecha="21/06/2026", sintoma="Apetito caprichoso", estado="Atención", nota="No se comió todo el alimento húmedo por la mañana, pero terminó el seco de noche.")
         ])
 
+        print("Insertando servicios en el mapa...")
+        db.add_all([
+            models.Servicio(
+                nombre="Hospital Veterinario Sania Pet & Urgencias 24h",
+                categoria="veterinaria",
+                subtipo="Hospital Clínico Veterinario 24/7",
+                rating=4.9,
+                reviews=312,
+                direccion="Av. Providencia 1450, Providencia",
+                telefono="+56 2 2987 6543",
+                whatsapp="+56987654321",
+                tarifa="Consulta general $22.000 / Urgencias $35.000",
+                horario="Abierto 24 Horas",
+                lat=-33.4265,
+                lng=-70.6120,
+                descripcion="Atención médica integral, quirófano de alta complejidad, laboratorio clínico interno y urgencias 24/7.",
+                imagen_url="https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?auto=format&fit=crop&q=80&w=400&h=300"
+            ),
+            models.Servicio(
+                nombre="Sania Pet Shop & Farmacia Veterinaria",
+                categoria="tienda",
+                subtipo="Boutique, Accesorios y Farmacia",
+                rating=4.8,
+                reviews=189,
+                direccion="Av. Andrés Bello 2100, local 4B, Providencia",
+                telefono="+56 2 2987 6500",
+                whatsapp="+56912345678",
+                tarifa="Variedad de precios y convenios",
+                horario="Lun - Sáb: 09:00 a 20:30",
+                lat=-33.4190,
+                lng=-70.6080,
+                descripcion="Alimentos medicados y premium, juguetes interactivos, farmacia veterinaria con receta y accesorios de viaje.",
+                imagen_url="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&q=80&w=400&h=300"
+            ),
+            models.Servicio(
+                nombre="Tomás Robles - Paseos Caninos & Socialización",
+                categoria="paseador",
+                subtipo="Paseador Certificado & Estudiante Vet",
+                rating=5.0,
+                reviews=64,
+                direccion="Sector Plaza Las Lilas / Pocuro, Providencia",
+                telefono="+56 9 8765 4321",
+                whatsapp="+56987654321",
+                tarifa="$8.500 / Paseo (1 hr) - Packs mensuales",
+                horario="Lun - Vie: 07:00 a 19:00",
+                lat=-33.4340,
+                lng=-70.6020,
+                descripcion="Paseos en grupos reducidos (máx 3 perros), hidratación constante, collar con GPS satelital y reporte con fotos.",
+                imagen_url="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&q=80&w=400&h=300"
+            ),
+            models.Servicio(
+                nombre="NutriPet BARF & Alimento Natural",
+                categoria="alimento",
+                subtipo="Dietas Crudas, BARF y Pastelería Canina",
+                rating=4.9,
+                reviews=95,
+                direccion="Av. Francisco Bilbao 1650, Providencia",
+                telefono="+56 9 9123 4455",
+                whatsapp="+56991234455",
+                tarifa="Menús desde $3.900",
+                horario="Mar - Dom: 10:00 a 19:30",
+                lat=-33.4385,
+                lng=-70.6095,
+                descripcion="Porciones personalizadas congeladas, suplementos naturales, caldos de hueso y tortas de cumpleaños para mascotas.",
+                imagen_url="https://images.unsplash.com/photo-1589924691995-400dc9ecc119?auto=format&fit=crop&q=80&w=400&h=300"
+            ),
+            models.Servicio(
+                nombre="Valeria Gómez - Cuidado Felino & Canino a Domicilio",
+                categoria="cuidador",
+                subtipo="Técnico en Enfermería Veterinaria (TENS Vet)",
+                rating=5.0,
+                reviews=42,
+                direccion="Calle Los Leones 850, Providencia",
+                telefono="+56 9 2468 1357",
+                whatsapp="+56924681357",
+                tarifa="$15.000 / Visita o Noche",
+                horario="Disponible con reserva previa",
+                lat=-33.4280,
+                lng=-70.6050,
+                descripcion="Visitas de cuidado en casa para gatos y perros tímidos. Administración de medicamentos orales e inyectables.",
+                imagen_url="https://images.unsplash.com/photo-1544568100-847a948585b9?auto=format&fit=crop&q=80&w=400&h=300"
+            ),
+            models.Servicio(
+                nombre="Hotel Felino & Canino Resort Las Palmas",
+                categoria="hotel",
+                subtipo="Hotel Boutique & Guardería de Día",
+                rating=4.7,
+                reviews=118,
+                direccion="Av. El Bosque Sur 120, Las Condes",
+                telefono="+56 2 2345 6789",
+                whatsapp="+56933445566",
+                tarifa="$26.000 / Día (incluye cámaras 24h)",
+                horario="Recepción: 08:00 a 20:00",
+                lat=-33.4160,
+                lng=-70.5960,
+                descripcion="Habitaciones individuales climatizadas, patio de juegos exterior, cámaras de seguridad accesibles desde app.",
+                imagen_url="https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&q=80&w=400&h=300"
+            ),
+            models.Servicio(
+                nombre="Café & Jardín Pet-Friendly El Botánico",
+                categoria="petfriendly",
+                subtipo="Cafetería & Terraza Apta Mascotas",
+                rating=4.8,
+                reviews=230,
+                direccion="Av. Pocuro 2012, Providencia",
+                telefono="+56 9 9876 5432",
+                whatsapp="+56998765432",
+                tarifa="$4.500 - $9.000 consumo promedio",
+                horario="Lun - Dom: 08:30 a 21:00",
+                lat=-33.4355,
+                lng=-70.5980,
+                descripcion="Amplia terraza arbolada con bebederos de agua fresca, snacks de cortesía y espacio seguro para descanso de mascotas.",
+                imagen_url="https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=400&h=300"
+            )
+        ])
+
+        print("Insertando reportes de mascotas perdidas (SOS)...")
+        db.add_all([
+            models.MascotaPerdida(
+                mascota_id=None,
+                nombre_mascota="Thor",
+                especie="Perro",
+                raza="Golden Retriever",
+                color="Dorado claro",
+                foto="https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&q=80&w=400&h=400",
+                fecha_extravio="Ayer a las 18:30 hrs",
+                lat=-33.4310,
+                lng=-70.6060,
+                direccion_referencia="Cerca de Parque Inés de Suárez, Providencia",
+                recompensa="$100.000",
+                contacto_nombre="Carlos Mendoza",
+                contacto_telefono="+56 9 7788 9900",
+                contacto_whatsapp="+56977889900",
+                descripcion="Se asustó con el ruido de fuegos artificiales y salió corriendo hacia Av. Bilbao. Lleva collar azul con placa y microchip.",
+                estado="perdida",
+                radio_metros=400,
+                created_at="2026-08-23 19:00"
+            ),
+            models.MascotaPerdida(
+                mascota_id=None,
+                nombre_mascota="Mimi",
+                especie="Gato",
+                raza="Siamés / Mestizo",
+                color="Crema con orejas y cola oscura",
+                foto="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&q=80&w=400&h=400",
+                fecha_extravio="Hoy a las 08:00 hrs",
+                lat=-33.4230,
+                lng=-70.6150,
+                direccion_referencia="Sector Metro Manuel Montt / Calle Manuel Montt",
+                recompensa="$50.000",
+                contacto_nombre="Marcela Silva",
+                contacto_telefono="+56 9 6655 4433",
+                contacto_whatsapp="+56966554433",
+                descripcion="Gatita de interior, muy asustadiza. Se escapó por una ventana abierta en el segundo piso. Ojos celestes intensos.",
+                estado="perdida",
+                radio_metros=250,
+                created_at="2026-08-24 08:30"
+            )
+        ])
+
         db.commit()
         print("Base de datos poblada correctamente.")
     except Exception as e:

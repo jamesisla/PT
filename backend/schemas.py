@@ -238,3 +238,81 @@ class PropietarioUpdate(BaseModel):
     telefono: Optional[str] = ""
     email: Optional[str] = ""
     direccion: Optional[str] = ""
+
+class ServicioSchema(CamelModel):
+    id: int
+    nombre: str
+    categoria: str
+    subtipo: Optional[str] = ""
+    rating: float = 5.0
+    reviews: int = 0
+    direccion: str
+    telefono: Optional[str] = ""
+    whatsapp: Optional[str] = ""
+    tarifa: Optional[str] = ""
+    horario: Optional[str] = ""
+    lat: float
+    lng: float
+    descripcion: Optional[str] = ""
+    imagen_url: Optional[str] = ""
+
+class ServicioCreate(BaseModel):
+    nombre: str
+    categoria: str
+    subtipo: Optional[str] = ""
+    rating: Optional[float] = 5.0
+    reviews: Optional[int] = 0
+    direccion: str
+    telefono: Optional[str] = ""
+    whatsapp: Optional[str] = ""
+    tarifa: Optional[str] = ""
+    horario: Optional[str] = ""
+    lat: float
+    lng: float
+    descripcion: Optional[str] = ""
+    imagen_url: Optional[str] = ""
+
+class MascotaPerdidaSchema(CamelModel):
+    id: int
+    mascota_id: Optional[str] = None
+    nombre_mascota: str
+    especie: str
+    raza: Optional[str] = ""
+    color: Optional[str] = ""
+    foto: Optional[str] = ""
+    fecha_extravio: str
+    lat: float
+    lng: float
+    direccion_referencia: str
+    recompensa: Optional[str] = ""
+    contacto_nombre: str
+    contacto_telefono: str
+    contacto_whatsapp: Optional[str] = ""
+    descripcion: Optional[str] = ""
+    estado: str = "perdida"
+    radio_metros: int = 300
+    created_at: Optional[str] = None
+
+class MascotaPerdidaCreate(BaseModel):
+    mascota_id: Optional[str] = None
+    nombre_mascota: str
+    especie: str
+    raza: Optional[str] = ""
+    color: Optional[str] = ""
+    foto: Optional[str] = ""
+    fecha_extravio: str
+    lat: float
+    lng: float
+    direccion_referencia: str
+    recompensa: Optional[str] = ""
+    contacto_nombre: str
+    contacto_telefono: str
+    contacto_whatsapp: Optional[str] = ""
+    descripcion: Optional[str] = ""
+    estado: Optional[str] = "perdida"
+    radio_metros: Optional[int] = 300
+    created_at: Optional[str] = None
+
+class MascotaPerdidaUpdateEstado(BaseModel):
+    estado: str
+

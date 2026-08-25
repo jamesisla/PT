@@ -576,3 +576,95 @@ def delete_image(pet_id: str, imagen_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"status": "success", "message": "Medical image record deleted"}
 
+# --- MAPET SERVICIOS & MASCOTAS PERDIDAS ENDPOINTS ---
+
+# GET all services
+@app.get("/api/servicios", response_model=list[schemas.ServicioSchema])
+def list_servicios(categoria: str = None, db: Session = Depends(get_db)):
+    query = db.query(models.Servicio)
+    if categoria and categoria != "todos":
+        query = query.filter(models.Servicio.categoria == categoria)
+    return query.all()
+
+# POST a new service
+@app.post("/api/servicios", response_model=schemas.ServicioSchema)
+def create_servicio(servicio: schemas.ServicioCreate, db: Session = Depends(get_db)):
+    db_srv = models.Servicio(
+        nombre=servicio.nombre,
+        categoria=servicio.categoria,
+        subtipo=servicio.subtipo,
+        rating=servicio.rating or 5.0,
+        reviews=servicio.reviews or 0,
+        direccion=servicio.direccion,
+        telefono=servicio.telefono,
+        whatsapp=servicio.whatsapp,
+        tarifa=servicio.tarifa,
+        horario=servicio.horario,
+        lat=servicio.lat,
+        lng=servicio.lng,
+        descripcion=servicio.descripcion,
+        imagen_url=servicio.imagen_url
+    )
+    db.add(db_srv)
+    db.commit()
+    db.refresh(db_srv)
+    return db_srv
+
+# GET all lost pet reports
+@app.get("/api/mascotas-perdidas", response_model=list[schemas.MascotaPerdidaSchema])
+def list_mascotas_perdidas(estado: str = None, db: Session = Depends(get_db)):
+    query = db.query(models.MascotaPerdida)
+    if estado and estado != "todos":
+        query = query.filter(models.MascotaPerdida.estado == estado)
+    return query.order_by(models.MascotaPerdida.id.desc()).all()
+
+# POST a lost pet report
+@app.post("/api/mascotas-perdidas", response_model=schemas.MascotaPerdidaSchema)
+def report_mascota_perdida(report: schemas.MascotaPerdidaCreate, db: Session = Depends(get_db)):
+    db_rep = models.MascotaPerdida(
+        mascota_id=report.mascota_id,
+        nombre_mascota=report.nombre_mascota,
+        especie=report.especie,
+        raza=report.raza,
+        color=report.color,
+        foto=report.foto,
+        fecha_extravio=report.fecha_extravio,
+        lat=report.lat,
+        lng=report.lng,
+        direccion_referencia=report.direccion_referencia,
+        recompensa=report.recompensa,
+        contacto_nombre=report.contacto_nombre,
+        contacto_telefono=report.contacto_telefono,
+        contacto_whatsapp=report.contacto_whatsapp,
+        descripcion=report.descripcion,
+        estado=report.estado or "perdida",
+        radio_metros=report.radio_metros or 300,
+        created_at=report.created_at
+    )
+    db.add(db_rep)
+    db.commit()
+    db.refresh(db_rep)
+    return db_rep
+
+# PATCH update lost pet status (e.g. 'encontrada', 'avistada', 'perdida')
+@app.patch("/api/mascotas-perdidas/{reporte_id}/estado", response_model=schemas.MascotaPerdidaSchema)
+def update_estado_mascota_perdida(reporte_id: int, payload: schemas.MascotaPerdidaUpdateEstado, db: Session = Depends(get_db)):
+    report = db.query(models.MascotaPerdida).filter(models.MascotaPerdida.id == reporte_id).first()
+    if not report:
+        raise HTTPException(status_code=404, detail="Lost pet report not found")
+    report.estado = payload.estado
+    db.commit()
+    db.refresh(report)
+    return report
+
+# DELETE a lost pet report
+@app.delete("/api/mascotas-perdidas/{reporte_id}")
+def delete_mascota_perdida(reporte_id: int, db: Session = Depends(get_db)):
+    report = db.query(models.MascotaPerdida).filter(models.MascotaPerdida.id == reporte_id).first()
+    if not report:
+        raise HTTPException(status_code=404, detail="Lost pet report not found")
+    db.delete(report)
+    db.commit()
+    return {"status": "success", "message": "Lost pet report deleted"}
+
+

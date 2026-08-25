@@ -200,6 +200,13 @@ export default function AddMenu({ onClose, onAddRecord, initialOption = null }: 
       title: 'Registrar Imagen',
       subtitle: 'Ecografías y radiografías',
       color: 'bg-cyan-50 text-cyan-600'
+    },
+    {
+      id: 'mascota-perdida',
+      icon: AlertTriangle,
+      title: 'Reportar Mascota Perdida (SOS)',
+      subtitle: 'Alerta y búsqueda comunitaria en mapa',
+      color: 'bg-red-50 text-red-600 border border-red-200'
     }
   ];
 
@@ -1145,7 +1152,14 @@ export default function AddMenu({ onClose, onAddRecord, initialOption = null }: 
                 return (
                   <button
                     key={option.id}
-                    onClick={() => setSelectedOption(option.id)}
+                    onClick={() => {
+                      if (option.id === 'mascota-perdida') {
+                        onAddRecord('mascota-perdida', null);
+                        onClose();
+                      } else {
+                        setSelectedOption(option.id);
+                      }
+                    }}
                     className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-gray-50/50 transition-colors border border-transparent hover:border-gray-100 text-left active:scale-[0.98] transition-transform"
                   >
                     <div className={`p-2.5 rounded-xl shrink-0 ${option.color}`}>

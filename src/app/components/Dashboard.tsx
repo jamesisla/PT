@@ -188,29 +188,31 @@ export default function Dashboard({ activePet, onNavigate, onAlertClick }: Dashb
           </div>
         </div>
 
-        {/* Mapet Services Card */}
+        {/* Mapet Services & SOS Card */}
         <div 
           onClick={() => onNavigate('mapet-servicios')}
-          className="bg-gradient-to-br from-indigo-500 via-[#1A5AD7] to-[#00AEEF] rounded-3xl p-5 text-white shadow-md relative overflow-hidden cursor-pointer group hover:shadow-lg transition-all"
+          className="bg-gradient-to-br from-indigo-600 via-[#1A5AD7] to-[#00AEEF] rounded-3xl p-5 text-white shadow-md relative overflow-hidden cursor-pointer group hover:shadow-lg transition-all active:scale-[0.99]"
         >
-          {/* Decorative background city grid pattern representation */}
-          <div className="absolute inset-0 opacity-10 pointer-events-none" style={{
-            backgroundImage: `radial-gradient(white 1px, transparent 1px)`,
-            backgroundSize: '16px 16px'
-          }} />
+          {/* Decorative background circle */}
+          <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none" />
           
           <div className="flex justify-between items-center relative z-10">
-            <div className="space-y-1">
-              <span className="bg-white/20 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
-                Geolocalización
-              </span>
-              <h4 className="font-extrabold text-white text-base leading-tight">mapet lugares & Servicios (maketa)</h4>
-              <p className="text-[10px] text-white/80 font-bold leading-normal">
-                Busca paseadores, cuidadores, hoteles y locales pet-friendly a tu alrededor.
+            <div className="space-y-1.5 flex-1 pr-2">
+              <div className="flex items-center gap-2">
+                <span className="bg-white/20 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  OpenStreetMap Interactivo
+                </span>
+                <span className="bg-red-500/90 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
+                  SOS Perdidos
+                </span>
+              </div>
+              <h4 className="font-extrabold text-white text-base leading-tight">Mapet Servicios & Radar SOS</h4>
+              <p className="text-[10px] text-white/85 font-medium leading-normal">
+                Encuentra veterinarias, paseadores, tiendas BARF y reporta o ayuda a encontrar mascotas perdidas en tu zona.
               </p>
             </div>
             
-            <div className="bg-white/15 p-3 rounded-2xl group-hover:bg-white/25 transition-colors shrink-0 ml-4 flex items-center justify-center">
+            <div className="bg-white/20 p-3.5 rounded-2xl group-hover:bg-white/30 transition-colors shrink-0 flex items-center justify-center shadow-inner">
               <MapPin className="w-6 h-6 text-white stroke-[2.5]" />
             </div>
           </div>
