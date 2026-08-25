@@ -62,8 +62,37 @@ func InitDB(dbPath string) (*sql.DB, error) {
 
 func createTables(db *sql.DB) error {
 	schema := `
+	CREATE TABLE IF NOT EXISTS usuarios (
+		id TEXT PRIMARY KEY,
+		email TEXT NOT NULL UNIQUE,
+		password_hash TEXT NOT NULL,
+		nombre TEXT NOT NULL,
+		telefono TEXT,
+		rut TEXT,
+		rol TEXT DEFAULT 'propietario',
+		estado TEXT DEFAULT 'activo',
+		created_at TEXT
+	);
+
+	CREATE TABLE IF NOT EXISTS analytics_config (
+		key TEXT PRIMARY KEY,
+		value TEXT NOT NULL
+	);
+
+	CREATE TABLE IF NOT EXISTS analytics_events (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		path TEXT NOT NULL,
+		method TEXT NOT NULL,
+		status_code INTEGER,
+		duration_ms INTEGER,
+		user_agent TEXT,
+		ip_hash TEXT,
+		created_at TEXT
+	);
+
 	CREATE TABLE IF NOT EXISTS mascotas (
 		id TEXT PRIMARY KEY,
+		usuario_id TEXT,
 		nombre TEXT NOT NULL,
 		especie TEXT NOT NULL,
 		raza TEXT,

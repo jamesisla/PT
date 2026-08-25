@@ -46,9 +46,12 @@ import PerfilMascota from './components/PerfilMascota';
 import AddMenu from './components/AddMenu';
 import AddPetModal from './components/AddPetModal';
 import MapetServicios from './components/MapetServicios';
+import AdminPortal from './components/AdminPortal';
+import AuthModal from './components/AuthModal';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { AlertTriangle, Bell, Info, Clock, Check, Trash2, X } from 'lucide-react';
 
-export default function App() {
+function AppContent() {
   const [petsList, setPetsList] = useState<any[]>([]);
   const [activePetId, setActivePetId] = useState('luna');
   const [activePet, setActivePet] = useState<Pet | null>(null);
@@ -481,6 +484,10 @@ export default function App() {
       );
     }
 
+    if (activeScreen === 'admin-portal') {
+      return <AdminPortal onBackToApp={() => setActiveScreen(null)} />;
+    }
+
     if (activeScreen === 'alertas-detalle') {
       setActiveTab('alertas');
       setActiveScreen(null);
@@ -597,6 +604,7 @@ export default function App() {
           onSelectPet={handleSelectPet}
           onOpenAddPet={() => setShowAddPetModal(true)}
           onOpenSettings={() => alert('Configuración: Simulación de ajustes.')}
+          onOpenAdmin={() => setActiveScreen('admin-portal')}
         />
         
         {renderContent()}
@@ -715,7 +723,17 @@ export default function App() {
             </div>
           </div>
         )}
+        {/* Global Auth Modal */}
+        <AuthModal />
       </div>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }

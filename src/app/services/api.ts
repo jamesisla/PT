@@ -2,8 +2,8 @@ import { Pet, petsDatabase, savePetsDatabase } from '../data/petData';
 import { Place, LostPet, getLocalPlaces, saveLocalPlaces, getLocalLostPets, saveLocalLostPets } from '../data/mapData';
 
 const BASE_URL = typeof window !== 'undefined' 
-  ? `http://${window.location.hostname}:8000/api` 
-  : 'http://localhost:8000/api';
+  ? (window.location.port === '5173' ? `http://${window.location.hostname}:8080/api` : '/api')
+  : '/api';
 
 
 export async function getPetsList(): Promise<any[]> {
@@ -931,11 +931,147 @@ export async function deleteMascotaPerdida(reporteId: number): Promise<boolean> 
     });
     if (!res.ok) throw new Error('API error');
   } catch (err) {
-    console.warn('FastAPI backend unreachable. Deleting lost pet locally.');
+    console.warn('Backend unreachable. Deleting lost pet locally.');
   }
   const current = getLocalLostPets();
   saveLocalLostPets(current.filter(p => p.id !== reporteId));
   return true;
 }
+
+// ----------------------------------------------------
+// SuperAdmin Management & Analytics APIs
+// ----------------------------------------------------
+
+export async function getAdminStats(): Promise<any> {
+  const res = await fetch(`${BASE_URL}/admin/stats`, {
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('saniapet_jwt') || ''}` }
+  });
+  if (!res.ok) throw new Error('Failed to fetch admin stats');
+  return await res.json();
+}
+
+export async function getAdminUsers(search = '', role = 'todos'): Promise<any[]> {
+  const res = await fetch(`${BASE_URL}/admin/users?q=${encodeURIComponent(search)}&role=${encodeURIComponent(role)}`, {
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('saniapet_jwt') || ''}` }
+  });
+  if (!res.ok) throw new Error('Failed to fetch users');
+  return await res.json();
+}
+
+export async function updateUserRole(userId: string, rol: string): Promise<any> {
+  const res = await fetch(`${BASE_URL}/admin/users/${userId}/role`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('saniapet_jwt') || ''}`
+    },
+    body: JSON.stringify({ rol })
+  });
+  if (!res.ok) throw new Error('Failed to update role');
+  return await res.json();
+}
+
+export async function updateUserStatus(userId: string, estado: string): Promise<any> {
+  const res = await fetch(`${BASE_URL}/admin/users/${userId}/status`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('saniapet_jwt') || ''}`
+    },
+    body: JSON.stringify({ estado })
+  });
+  if (!res.ok) throw new Error('Failed to update status');
+  return await res.json();
+}
+
+export async function deleteAdminUser(userId: string): Promise<any> {
+  const res = await fetch(`${BASE_URL}/admin/users/${userId}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('saniapet_jwt') || ''}` }
+  });
+  if (!res.ok) throw new Error('Failed to delete user');
+  return await res.json();
+}
+
+export async function getAdminPets(): Promise<any[]> {
+  const res = await fetch(`${BASE_URL}/admin/pets`, {
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('saniapet_jwt') || ''}` }
+  });
+  if (!res.ok) throw new Error('Failed to fetch pets list');
+  return await res.json();
+}
+
+// ----------------------------------------------------
+// Telemetry & Analytics APIs (with ON/OFF Kill-Switch)
+// ----------------------------------------------------
+
+export async function getAnalyticsConfig(): Promise<{ enabled: boolean; totalEvents: number }> {
+  const res = await fetch(`${BASE_URL}/admin/analytics/config`, {
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('saniapet_jwt') || ''}` }
+  });
+  if (!res.ok) throw new Error('Failed to fetch analytics config');
+  return await res.json();
+}
+
+export async function toggleAnalyticsTracking(enabled: boolean): Promise<any> {
+  const res = await fetch(`${BASE_URL}/admin/analytics/toggle`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('saniapet_jwt') || ''}`
+    },
+    body: JSON.stringify({ enabled })
+  });
+  if (!res.ok) throw new Error('Failed to toggle tracking');
+  return await res.json();
+}
+
+export async function getAnalyticsMetrics(): Promise<any> {
+  const res = await fetch(`${BASE_URL}/admin/analytics/metrics`, {
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('saniapet_jwt') || ''}` }
+  });
+  if (!res.ok) throw new Error('Failed to fetch analytics metrics');
+  return await res.json();
+}
+
+export async function purgeAnalytics(): Promise<any> {
+  const res = await fetch(`${BASE_URL}/admin/analytics/purge`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('saniapet_jwt') || ''}` }
+  });
+  if (!res.ok) throw new Error('Failed to purge analytics');
+  return await res.json();
+}
+
+// ----------------------------------------------------
+// SQLite Hot Backups APIs
+// ----------------------------------------------------
+
+export async function getBackupsList(): Promise<any[]> {
+  const res = await fetch(`${BASE_URL}/admin/backups`, {
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('saniapet_jwt') || ''}` }
+  });
+  if (!res.ok) throw new Error('Failed to fetch backups list');
+  return await res.json();
+}
+
+export async function createHotBackup(): Promise<any> {
+  const res = await fetch(`${BASE_URL}/admin/backups/create`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('saniapet_jwt') || ''}` }
+  });
+  if (!res.ok) throw new Error('Failed to create backup');
+  return await res.json();
+}
+
+export async function deleteBackupFile(filename: string): Promise<any> {
+  const res = await fetch(`${BASE_URL}/admin/backups/${encodeURIComponent(filename)}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('saniapet_jwt') || ''}` }
+  });
+  if (!res.ok) throw new Error('Failed to delete backup file');
+  return await res.json();
+}
+
 
 

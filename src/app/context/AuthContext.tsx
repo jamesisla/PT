@@ -1,0 +1,145 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
+
+export interface User {
+  id: string;
+  email: string;
+  nombre: string;
+  telefono?: string;
+  rut?: string;
+  rol: 'superadmin' | 'admin' | 'veterinario' | 'proveedor' | 'propietario';
+  estado: string;
+  createdAt?: string;
+}
+
+interface AuthContextType {
+  user: User | null;
+  token: string | null;
+  isAuthenticated: boolean;
+  isAdmin: boolean;
+  login: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
+  register: (data: { email: string; password: string; nombre: string; telefono?: string; rut?: string; rol?: string }) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
+  openAuthModal: (mode?: 'login' | 'register') => void;
+  closeAuthModal: () => void;
+  isAuthModalOpen: boolean;
+  authModalMode: 'login' | 'register';
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(() => {
+    const saved = localStorage.getItem('saniapet_user');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem('saniapet_jwt'));
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
+
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem('saniapet_user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('saniapet_user');
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (token) {
+      localStorage.setItem('saniapet_jwt', token);
+    } else {
+      localStorage.removeItem('saniapet_jwt');
+    }
+  }, [token]);
+
+  const login = async (email: string, pass: string) => {
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: pass })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { success: false, error: data.error || 'Error al iniciar sesión' };
+      }
+      setUser(data.user);
+      setToken(data.token);
+      setIsAuthModalOpen(false);
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Error de conexión' };
+    }
+  };
+
+  const register = async (inputData: { email: string; password: string; nombre: string; telefono?: string; rut?: string; rol?: string }) => {
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(inputData)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { success: false, error: data.error || 'Error al registrarse' };
+      }
+      setUser(data.user);
+      setToken(data.token);
+      setIsAuthModalOpen(false);
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Error de conexión' };
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (err) {
+      // Ignore network failure on logout
+    }
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem('saniapet_user');
+    localStorage.removeItem('saniapet_jwt');
+  };
+
+  const openAuthModal = (mode: 'login' | 'register' = 'login') => {
+    setAuthModalMode(mode);
+    setIsAuthModalOpen(true);
+  };
+
+  const closeAuthModal = () => {
+    setIsAuthModalOpen(false);
+  };
+
+  const isAdmin = user?.rol === 'superadmin' || user?.rol === 'admin';
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        isAuthenticated: !!user,
+        isAdmin,
+        login,
+        register,
+        logout,
+        openAuthModal,
+        closeAuthModal,
+        isAuthModalOpen,
+        authModalMode
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
