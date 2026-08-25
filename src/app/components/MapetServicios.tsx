@@ -172,12 +172,29 @@ export default function MapetServicios({
       setPickedLocation({ lat: e.latlng.lat, lng: e.latlng.lng });
     });
 
+    // Invalidate size shortly after mount to ensure smooth tile loading
+    setTimeout(() => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.invalidateSize();
+      }
+    }, 200);
+
     // Cleanup
     return () => {
       map.remove();
       mapInstanceRef.current = null;
     };
   }, []);
+
+  // Invalidate map size on mode switch
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.invalidateSize();
+      }
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [activeMode]);
 
   // Update Picked location marker
   useEffect(() => {

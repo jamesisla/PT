@@ -495,6 +495,15 @@ export default function App() {
             onAlertClick={setSelectedAlertForAction} 
           />
         );
+      case 'mapa':
+        return (
+          <MapetServicios 
+            onBack={() => setActiveTab('home')}
+            activePet={activePet}
+            allPets={petsList.length > 0 ? petsList : (activePet ? [activePet] : [])}
+            initialMode="servicios"
+          />
+        );
       case 'diario':
         return (
           <DiarioSalud 
