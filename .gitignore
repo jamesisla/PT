@@ -14,16 +14,12 @@ dist-ssr
 *.local
 .npm
 
-# Python / Backend
-__pycache__/
-*.py[cod]
-*$py.class
-venv/
-.venv/
-env/
-*.env
-backend/__pycache__/
-*.sqlite3
+# Go Binaries & SQLite
+saniapet
+*.db
+*.db-shm
+*.db-wal
+
 
 # Editor & OS files
 .vscode/*
