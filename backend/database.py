@@ -2,7 +2,15 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://saniauser:saniapassword@db:5432/saniapetdb")
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://saniauser:saniapassword@localhost:5432/saniapetdb")
+
+# Adapt URL if psycopg (v3) is installed
+if DATABASE_URL.startswith("postgresql://"):
+    try:
+        import psycopg
+        DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
+    except ImportError:
+        pass
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
