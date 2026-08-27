@@ -141,20 +141,24 @@ func main() {
 		r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
 			path := strings.TrimPrefix(r.URL.Path, "/")
 			if path != "" {
-				// Serve static assets from embedded FS
+				// Serve static assets from embedded FS with immutable 1-year cache
 				if f, err := distSubFS.Open(path); err == nil {
 					f.Close()
+					if strings.HasPrefix(path, "assets/") {
+						w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+					}
 					fileServer.ServeHTTP(w, r)
 					return
 				}
 			}
-			// Fallback to index.html for SPA client-side routing
+			// Fallback to index.html for SPA client-side routing (no-cache for instant updates)
 			indexData, err := fs.ReadFile(distSubFS, "index.html")
 			if err != nil {
 				http.NotFound(w, r)
 				return
 			}
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 			w.WriteHeader(http.StatusOK)
 			w.Write(indexData)
 		})

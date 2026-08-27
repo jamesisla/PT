@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { ClipboardList, Scale, Syringe, Calendar, Bell, X, Check, Pill, Stethoscope, Bug, FlaskConical, Image as ImageIcon } from 'lucide-react';
+import { ClipboardList, Scale, Syringe, Calendar, Bell, X, Check, Pill, Stethoscope, Bug, FlaskConical, Image as ImageIcon, ArrowLeft, AlertTriangle } from 'lucide-react';
 
 interface AddMenuProps {
   onClose: () => void;
@@ -1182,19 +1182,36 @@ export default function AddMenu({ onClose, onAddRecord, initialOption = null }: 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
       onClick={onClose}
     >
       {/* Dimmed Background */}
-      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
       
-      {/* Sliding Drawer Container */}
+      {/* Sliding Drawer / Modal Container */}
       <div
-        className="relative bg-white rounded-t-[32px] w-full max-w-md p-6 pb-9 border-t border-gray-100 shadow-2xl z-50 animate-[slideUp_0.25s_ease-out]"
+        className="relative bg-white rounded-t-[32px] sm:rounded-3xl w-full max-w-lg p-6 pb-9 sm:p-7 border-t sm:border border-gray-100 shadow-2xl z-50 animate-[slideUp_0.25s_ease-out] max-h-[88vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Drag handle decoration */}
-        <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5 -mt-2" />
+        {/* Drag handle decoration on mobile */}
+        <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4 -mt-2 sm:hidden" />
+
+        {/* Back button when inside a specific form */}
+        {selectedOption && (
+          <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-100">
+            <button
+              type="button"
+              onClick={() => setSelectedOption(null)}
+              className="flex items-center gap-1.5 text-xs font-black text-[#00AEEF] hover:text-[#0099D6] transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Volver a opciones</span>
+            </button>
+            <span className="text-[10px] font-black uppercase tracking-wider text-gray-400 bg-gray-100 px-2.5 py-0.5 rounded-full">
+              Nuevo Registro
+            </span>
+          </div>
+        )}
 
         {/* Close Button */}
         <button 

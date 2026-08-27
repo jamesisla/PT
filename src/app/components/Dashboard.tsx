@@ -72,8 +72,8 @@ export default function Dashboard({ activePet, onNavigate, onAlertClick }: Dashb
   ];
 
   return (
-    <div className="flex-1 overflow-auto pb-24">
-      <div className="p-5 space-y-6">
+    <div className="flex-1 overflow-auto pb-24 md:pb-10">
+      <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6">
         
         {/* Animated Urgent Alerts Widget */}
         {activeAlerts && activeAlerts.length > 0 && (
@@ -82,13 +82,13 @@ export default function Dashboard({ activePet, onNavigate, onAlertClick }: Dashb
               <div 
                 key={alert.id}
                 onClick={() => onAlertClick(alert)}
-                className={`flex items-center rounded-2xl p-4 cursor-pointer shadow-sm border transition-all active:scale-[0.98] ${
+                className={`flex items-center rounded-2xl p-4 cursor-pointer shadow-xs border transition-all active:scale-[0.98] ${
                   alert.tipo === 'critica' 
-                    ? 'bg-red-50/80 border-red-200 animate-urgent' 
-                    : 'bg-amber-50/80 border-amber-200 hover:shadow-md'
+                    ? 'bg-red-50/90 border-red-200 animate-urgent' 
+                    : 'bg-amber-50/90 border-amber-200 hover:shadow-md'
                 }`}
               >
-                <div className={`p-2.5 rounded-xl mr-3 shadow-sm ${
+                <div className={`p-2.5 rounded-xl mr-3 shadow-xs shrink-0 ${
                   alert.tipo === 'critica' ? 'bg-red-500' : 'bg-amber-500'
                 }`}>
                   <AlertTriangle className="w-5 h-5 text-white" />
@@ -99,7 +99,7 @@ export default function Dashboard({ activePet, onNavigate, onAlertClick }: Dashb
                   }`}>
                     {alert.titulo}
                   </h4>
-                  <p className={`text-[10px] font-medium leading-normal ${
+                  <p className={`text-[10px] font-semibold leading-normal ${
                     alert.tipo === 'critica' ? 'text-red-700' : 'text-amber-700'
                   }`}>
                     {alert.descripcion}
@@ -117,112 +117,129 @@ export default function Dashboard({ activePet, onNavigate, onAlertClick }: Dashb
           </div>
         )}
 
-        {/* Pet Summary Card */}
-        <div 
-          onClick={() => onNavigate('perfil-detalle')}
-          className="bg-gradient-to-br from-[#00AEEF] to-[#1A5AD7] rounded-3xl p-5 text-white shadow-md relative overflow-hidden cursor-pointer group hover:shadow-lg transition-all"
-        >
-          {/* Decorative background shape */}
-          <div className="absolute right-0 bottom-0 w-32 h-32 bg-white/5 rounded-full -mr-8 -mb-8 pointer-events-none group-hover:scale-110 transition-transform duration-300" />
-          
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <span className="bg-white/20 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
-                Ficha Médica
-              </span>
-              <h2 className="text-2xl font-black mt-1 leading-none">{activePet.nombre}</h2>
-              <p className="text-white/85 text-xs font-semibold mt-1">{activePet.raza} • {activePet.edad}</p>
-            </div>
-            <div className="bg-white/15 p-2 rounded-2xl group-hover:bg-white/25 transition-colors">
-              <ChevronRight className="w-5 h-5 text-white" />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-y-3 pt-3 border-t border-white/10 text-xs">
-            <div>
-              <span className="text-white/60 text-[9px] font-bold uppercase tracking-wider block">Microchip</span>
-              <span className="font-extrabold">{activePet.microchip}</span>
-            </div>
-            <div>
-              <span className="text-white/60 text-[9px] font-bold uppercase tracking-wider block">Seguro Médico</span>
-              <span className="font-extrabold line-clamp-1">{activePet.seguro}</span>
-            </div>
-            <div>
-              <span className="text-white/60 text-[9px] font-bold uppercase tracking-wider block">Sexo</span>
-              <span className="font-extrabold">{activePet.sexo}</span>
-            </div>
-            <div>
-              <span className="text-white/60 text-[9px] font-bold uppercase tracking-wider block">Clínica Frecuente</span>
-              <span className="font-extrabold line-clamp-1">{activePet.clinicaFrecuente}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Shortcuts Section Title */}
-        <div>
-          <h3 className="text-gray-900 font-extrabold text-base mb-3.5 px-1 flex items-center gap-2">
-            <Activity className="w-4 h-4 text-[#00AEEF]" />
-            Historial Médico
-          </h3>
-          <div className="grid grid-cols-2 gap-4">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <div
-                  key={item.id}
-                  onClick={() => onNavigate(item.id)}
-                  className={`${item.bgColor} rounded-2xl p-4 shadow-sm border border-gray-100/50 transition-all duration-200 cursor-pointer active:scale-[0.97]`}
-                >
-                  <div className="flex flex-col items-center text-center">
-                    <div className={`${item.iconBg} w-13 h-13 rounded-2xl flex items-center justify-center mb-2.5 shadow-sm`}>
-                      <Icon className={`w-6 h-6 ${item.iconColor}`} />
-                    </div>
-                    <h3 className="font-extrabold text-gray-900 text-sm mb-0.5 leading-tight">
-                      {item.title}
-                    </h3>
-                    <p className="text-[10px] text-gray-400 font-semibold">{item.subtitle}</p>
+        {/* Responsive Grid: 1 column on mobile, 3 columns on Desktop */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left Column on Desktop (Col Span 5): Pet Summary Card + Weight Tracker */}
+          <div className="lg:col-span-5 space-y-6">
+            {/* Pet Summary Card */}
+            <div 
+              onClick={() => onNavigate('perfil-detalle')}
+              className="bg-gradient-to-br from-[#00AEEF] to-[#1A5AD7] rounded-3xl p-6 text-white shadow-md relative overflow-hidden cursor-pointer group hover:shadow-lg transition-all"
+            >
+              <div className="absolute right-0 bottom-0 w-36 h-36 bg-white/5 rounded-full -mr-8 -mb-8 pointer-events-none group-hover:scale-110 transition-transform duration-300" />
+              
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center gap-3.5">
+                  <img
+                    src={activePet.foto}
+                    alt={activePet.nombre}
+                    className="w-14 h-14 rounded-2xl object-cover border-2 border-white/20 shadow-md bg-white/10"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMTgiIGZpbGw9IiNFM0YyRkQiLz48dGV4dCB4PSI1MCUiIHk9IjU1JSIgZm9udC1zaXplPSIxNiIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0iIzE1NjVDNCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+UEVUPC90ZXh0Pjwvc3ZnPg==';
+                    }}
+                  />
+                  <div>
+                    <span className="bg-white/20 text-white text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                      Ficha Médica
+                    </span>
+                    <h2 className="text-2xl font-black mt-1 leading-none">{activePet.nombre}</h2>
+                    <p className="text-white/85 text-xs font-semibold mt-1">{activePet.raza} • {activePet.edad}</p>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Mapet Services & SOS Card */}
-        <div 
-          onClick={() => onNavigate('mapet-servicios')}
-          className="bg-gradient-to-br from-indigo-600 via-[#1A5AD7] to-[#00AEEF] rounded-3xl p-5 text-white shadow-md relative overflow-hidden cursor-pointer group hover:shadow-lg transition-all active:scale-[0.99]"
-        >
-          {/* Decorative background circle */}
-          <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none" />
-          
-          <div className="flex justify-between items-center relative z-10">
-            <div className="space-y-1.5 flex-1 pr-2">
-              <div className="flex items-center gap-2">
-                <span className="bg-white/20 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
-                  OpenStreetMap Interactivo
-                </span>
-                <span className="bg-red-500/90 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
-                  SOS Perdidos
-                </span>
+                <div className="bg-white/15 p-2 rounded-2xl group-hover:bg-white/25 transition-colors">
+                  <ChevronRight className="w-5 h-5 text-white" />
+                </div>
               </div>
-              <h4 className="font-extrabold text-white text-base leading-tight">Mapet Servicios & Radar SOS</h4>
-              <p className="text-[10px] text-white/85 font-medium leading-normal">
-                Encuentra veterinarias, paseadores, tiendas BARF y reporta o ayuda a encontrar mascotas perdidas en tu zona.
-              </p>
+
+              <div className="grid grid-cols-2 gap-y-3 pt-3 border-t border-white/10 text-xs">
+                <div>
+                  <span className="text-white/60 text-[9px] font-bold uppercase tracking-wider block">Microchip</span>
+                  <span className="font-extrabold">{activePet.microchip}</span>
+                </div>
+                <div>
+                  <span className="text-white/60 text-[9px] font-bold uppercase tracking-wider block">Seguro Médico</span>
+                  <span className="font-extrabold line-clamp-1">{activePet.seguro}</span>
+                </div>
+                <div>
+                  <span className="text-white/60 text-[9px] font-bold uppercase tracking-wider block">Sexo</span>
+                  <span className="font-extrabold">{activePet.sexo}</span>
+                </div>
+                <div>
+                  <span className="text-white/60 text-[9px] font-bold uppercase tracking-wider block">Clínica Frecuente</span>
+                  <span className="font-extrabold line-clamp-1">{activePet.clinicaFrecuente}</span>
+                </div>
+              </div>
             </div>
-            
-            <div className="bg-white/20 p-3.5 rounded-2xl group-hover:bg-white/30 transition-colors shrink-0 flex items-center justify-center shadow-inner">
-              <MapPin className="w-6 h-6 text-white stroke-[2.5]" />
+
+            {/* Weight Tracker Embed */}
+            <PesoGrafico 
+              data={activePet.pesoHistorial} 
+              pesoActual={activePet.pesoActual} 
+            />
+          </div>
+
+          {/* Right Column on Desktop (Col Span 7): Shortcuts + Mapet Banner */}
+          <div className="lg:col-span-7 space-y-6">
+            {/* Mapet Services & SOS Card */}
+            <div 
+              onClick={() => onNavigate('mapet-servicios')}
+              className="bg-gradient-to-br from-indigo-600 via-[#1A5AD7] to-[#00AEEF] rounded-3xl p-5 md:p-6 text-white shadow-md relative overflow-hidden cursor-pointer group hover:shadow-lg transition-all active:scale-[0.99]"
+            >
+              <div className="absolute -right-6 -bottom-6 w-40 h-40 bg-white/10 rounded-full blur-xl pointer-events-none" />
+              
+              <div className="flex justify-between items-center relative z-10">
+                <div className="space-y-1.5 flex-1 pr-3">
+                  <div className="flex items-center gap-2">
+                    <span className="bg-white/20 text-white text-[8px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                      OpenStreetMap Interactivo
+                    </span>
+                    <span className="bg-red-500 text-white text-[8px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
+                      SOS Perdidos
+                    </span>
+                  </div>
+                  <h4 className="font-black text-white text-base md:text-lg leading-tight">Mapet Servicios & Radar SOS</h4>
+                  <p className="text-[11px] text-white/85 font-medium leading-relaxed">
+                    Directorio de veterinarias 24h, paseadores, cuidadores, tiendas BARF y reporte de mascotas perdidas en mapa.
+                  </p>
+                </div>
+                
+                <div className="bg-white/20 p-4 rounded-2xl group-hover:bg-white/30 transition-colors shrink-0 flex items-center justify-center shadow-inner">
+                  <MapPin className="w-7 h-7 text-white stroke-[2.5]" />
+                </div>
+              </div>
+            </div>
+
+            {/* Shortcuts Section */}
+            <div>
+              <h3 className="text-gray-900 font-extrabold text-base mb-3.5 px-1 flex items-center gap-2">
+                <Activity className="w-4 h-4 text-[#00AEEF]" />
+                Historial Clínico de {activePet.nombre}
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5">
+                {menuItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <div
+                      key={item.id}
+                      onClick={() => onNavigate(item.id)}
+                      className={`${item.bgColor} rounded-2xl p-4 shadow-xs border border-gray-100/60 transition-all duration-200 cursor-pointer active:scale-[0.97] hover:shadow-sm`}
+                    >
+                      <div className="flex flex-col items-center text-center">
+                        <div className={`${item.iconBg} w-12 h-12 rounded-2xl flex items-center justify-center mb-2.5 shadow-xs`}>
+                          <Icon className={`w-6 h-6 ${item.iconColor}`} />
+                        </div>
+                        <h3 className="font-extrabold text-gray-900 text-sm mb-0.5 leading-tight">
+                          {item.title}
+                        </h3>
+                        <p className="text-[10px] text-gray-400 font-semibold">{item.subtitle}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
-
-        {/* Weight Tracker Embed */}
-        <PesoGrafico 
-          data={activePet.pesoHistorial} 
-          pesoActual={activePet.pesoActual} 
-        />
 
       </div>
     </div>

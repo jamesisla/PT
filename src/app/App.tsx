@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Pet } from './data/petData';
 import { 
   getPetsList, 
@@ -45,13 +45,21 @@ import DiarioSalud from './components/DiarioSalud';
 import PerfilMascota from './components/PerfilMascota';
 import AddMenu from './components/AddMenu';
 import AddPetModal from './components/AddPetModal';
-import MapetServicios from './components/MapetServicios';
-import AdminPortal from './components/AdminPortal';
 import AuthModal from './components/AuthModal';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { AlertTriangle, Bell, Info, Clock, Check, Trash2, X } from 'lucide-react';
+import { 
+  AlertTriangle, Bell, Info, Clock, Check, Trash2, X,
+  Home, MapPin, ClipboardList, Stethoscope, ShieldCheck,
+  Bug, Pill, FlaskConical, Image as ImageIcon, Plus, Shield,
+  User, LogIn, LogOut, ChevronDown, Activity
+} from 'lucide-react';
+
+// Code splitting / Lazy Loading for heavy modules
+const MapetServicios = lazy(() => import('./components/MapetServicios'));
+const AdminPortal = lazy(() => import('./components/AdminPortal'));
 
 function AppContent() {
+  const { user, isAuthenticated, isAdmin, openAuthModal, logout } = useAuth();
   const [petsList, setPetsList] = useState<any[]>([]);
   const [activePetId, setActivePetId] = useState('luna');
   const [activePet, setActivePet] = useState<Pet | null>(null);
@@ -98,6 +106,7 @@ function AppContent() {
 
   const handleNavigate = (screen: string) => {
     setActiveScreen(screen);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleBack = () => {
@@ -107,275 +116,188 @@ function AppContent() {
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
     setActiveScreen(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleSelectPet = (petId: string) => {
-    setActivePetId(petId);
+  const handleSelectPet = (id: string) => {
+    setActivePetId(id);
     setActiveScreen(null);
-    setActiveTab('home');
   };
 
   const handleAddPet = async (petData: any) => {
     try {
       const created = await createNewPet(petData);
-      const list = await getPetsList();
-      setPetsList(list);
+      setPetsList(prev => [...prev, created]);
       setActivePetId(created.id);
-      setActiveScreen(null);
-      setActiveTab('home');
+      setActivePet(created);
+      setShowAddPetModal(false);
     } catch (err) {
-      console.error('Error creating pet', err);
+      alert('Error al crear la mascota');
     }
   };
 
+  // Handlers for medical records
   const handleAddRecord = async (type: string, record: any) => {
-    if (type === 'mascota-perdida') {
-      setActiveScreen('mapet-servicios-sos');
-      return;
-    }
-
     if (!activePet) return;
-
     try {
       if (type === 'sintoma') {
-        await addSymptomRecord(activePetId, record);
+        const updated = await addSymptomRecord(activePet.id, record);
+        setActivePet(updated);
       } else if (type === 'peso') {
-        await addWeightRecord(activePetId, record);
+        const updated = await addWeightRecord(activePet.id, record);
+        setActivePet(updated);
       } else if (type === 'vacuna') {
-        await addVaccineRecord(activePetId, record);
+        const updated = await addVaccineRecord(activePet.id, record);
+        setActivePet(updated);
       } else if (type === 'alerta') {
-        await addAlertRecord(activePetId, record);
+        const updated = await addAlertRecord(activePet.id, record);
+        setActivePet(updated);
       } else if (type === 'medicamento') {
-        await addMedicationRecord(activePetId, record);
+        const updated = await addMedicationRecord(activePet.id, record);
+        setActivePet(updated);
       } else if (type === 'diagnostico') {
-        await addDiagnosisRecord(activePetId, record);
+        const updated = await addDiagnosisRecord(activePet.id, record);
+        setActivePet(updated);
       } else if (type === 'desparasitacion') {
-        await addDewormingRecord(activePetId, record);
+        const updated = await addDewormingRecord(activePet.id, record);
+        setActivePet(updated);
       } else if (type === 'laboratorio') {
-        await addLaboratoryRecord(activePetId, record);
+        const updated = await addLaboratoryRecord(activePet.id, record);
+        setActivePet(updated);
       } else if (type === 'imagen') {
-        await addMedicalImageRecord(activePetId, record);
+        const updated = await addMedicalImageRecord(activePet.id, record);
+        setActivePet(updated);
+      } else if (type === 'mascota-perdida') {
+        setActiveScreen('mapet-servicios-sos');
       }
-
-      // Refresh from backend to display the newly saved DB record
-      const updatedDetail = await getPetDetail(activePetId);
-      setActivePet(updatedDetail);
     } catch (err) {
-      console.error('Error saving record', err);
+      console.error('Error adding record', err);
     }
+    setShowAddMenu(false);
   };
 
-  const handleAlertAction = async (alertId: string, action: string) => {
+  const handleUpdateSymptom = async (id: number, record: any) => {
     if (!activePet) return;
-    try {
-      await updateAlertAction(alertId, action, activePetId);
-      const updatedDetail = await getPetDetail(activePetId);
-      setActivePet(updatedDetail);
-    } catch (err) {
-      console.error('Error handling alert action', err);
-    }
+    const updated = await updateSymptomRecord(activePet.id, id, record);
+    setActivePet(updated);
   };
 
-  const handleUpdateSymptom = async (sintomaId: number, record: any) => {
+  const handleDeleteSymptom = async (id: number) => {
     if (!activePet) return;
-    try {
-      await updateSymptomRecord(activePetId, sintomaId, record);
-      const updatedDetail = await getPetDetail(activePetId);
-      setActivePet(updatedDetail);
-    } catch (err) {
-      console.error('Error updating symptom', err);
-    }
+    const updated = await deleteSymptomRecord(activePet.id, id);
+    setActivePet(updated);
   };
 
-  const handleDeleteSymptom = async (sintomaId: number) => {
+  const handleUpdateVaccine = async (id: number, record: any) => {
     if (!activePet) return;
-    try {
-      await deleteSymptomRecord(activePetId, sintomaId);
-      const updatedDetail = await getPetDetail(activePetId);
-      setActivePet(updatedDetail);
-    } catch (err) {
-      console.error('Error deleting symptom', err);
-    }
+    const updated = await updateVaccineRecord(activePet.id, id, record);
+    setActivePet(updated);
   };
 
-  const handleUpdateVaccine = async (vacunaId: number, record: any) => {
+  const handleDeleteVaccine = async (id: number) => {
     if (!activePet) return;
-    try {
-      await updateVaccineRecord(activePetId, vacunaId, record);
-      const updatedDetail = await getPetDetail(activePetId);
-      setActivePet(updatedDetail);
-    } catch (err) {
-      console.error('Error updating vaccine', err);
-    }
+    const updated = await deleteVaccineRecord(activePet.id, id);
+    setActivePet(updated);
   };
 
-  const handleDeleteVaccine = async (vacunaId: number) => {
+  const handleUpdateMedication = async (id: number, record: any) => {
     if (!activePet) return;
-    try {
-      await deleteVaccineRecord(activePetId, vacunaId);
-      const updatedDetail = await getPetDetail(activePetId);
-      setActivePet(updatedDetail);
-    } catch (err) {
-      console.error('Error deleting vaccine', err);
-    }
+    const updated = await updateMedicationRecord(activePet.id, id, record);
+    setActivePet(updated);
   };
 
-  const handleUpdateMedication = async (medicamentoId: number, record: any) => {
+  const handleDeleteMedication = async (id: number) => {
     if (!activePet) return;
-    try {
-      await updateMedicationRecord(activePetId, medicamentoId, record);
-      const updatedDetail = await getPetDetail(activePetId);
-      setActivePet(updatedDetail);
-    } catch (err) {
-      console.error('Error updating medication', err);
-    }
+    const updated = await deleteMedicationRecord(activePet.id, id);
+    setActivePet(updated);
   };
 
-  const handleDeleteMedication = async (medicamentoId: number) => {
+  const handleUpdateDiagnosis = async (id: number, record: any) => {
     if (!activePet) return;
-    try {
-      await deleteMedicationRecord(activePetId, medicamentoId);
-      const updatedDetail = await getPetDetail(activePetId);
-      setActivePet(updatedDetail);
-    } catch (err) {
-      console.error('Error deleting medication', err);
-    }
+    const updated = await updateDiagnosisRecord(activePet.id, id, record);
+    setActivePet(updated);
   };
 
-  const handleUpdatePetProfile = async (petData: any) => {
+  const handleDeleteDiagnosis = async (id: number) => {
     if (!activePet) return;
-    try {
-      await updatePetProfile(activePetId, petData);
-      const updatedDetail = await getPetDetail(activePetId);
-      setActivePet(updatedDetail);
-      // Refresh summary pet list in case name/photo changed
-      const list = await getPetsList();
-      setPetsList(list);
-    } catch (err) {
-      console.error('Error updating pet profile', err);
-    }
+    const updated = await deleteDiagnosisRecord(activePet.id, id);
+    setActivePet(updated);
   };
 
-  const handleUpdatePetOwner = async (ownerData: any) => {
+  const handleUpdateDeworming = async (id: number, record: any) => {
     if (!activePet) return;
-    try {
-      await updatePetOwner(activePetId, ownerData);
-      const updatedDetail = await getPetDetail(activePetId);
-      setActivePet(updatedDetail);
-    } catch (err) {
-      console.error('Error updating owner profile', err);
-    }
+    const updated = await updateDewormingRecord(activePet.id, id, record);
+    setActivePet(updated);
   };
 
-  const handleUpdateDiagnosis = async (diagnosticoId: number, record: any) => {
+  const handleDeleteDeworming = async (id: number) => {
     if (!activePet) return;
-    try {
-      await updateDiagnosisRecord(activePetId, diagnosticoId, record);
-      const updatedDetail = await getPetDetail(activePetId);
-      setActivePet(updatedDetail);
-    } catch (err) {
-      console.error('Error updating diagnosis', err);
-    }
+    const updated = await deleteDewormingRecord(activePet.id, id);
+    setActivePet(updated);
   };
 
-  const handleDeleteDiagnosis = async (diagnosticoId: number) => {
+  const handleUpdateLaboratory = async (id: string, record: any) => {
     if (!activePet) return;
-    try {
-      await deleteDiagnosisRecord(activePetId, diagnosticoId);
-      const updatedDetail = await getPetDetail(activePetId);
-      setActivePet(updatedDetail);
-    } catch (err) {
-      console.error('Error deleting diagnosis', err);
-    }
+    const updated = await updateLaboratoryRecord(activePet.id, id, record);
+    setActivePet(updated);
   };
 
-  const handleUpdateDeworming = async (dewormingId: number, record: any) => {
+  const handleDeleteLaboratory = async (id: string) => {
     if (!activePet) return;
-    try {
-      await updateDewormingRecord(activePetId, dewormingId, record);
-      const updatedDetail = await getPetDetail(activePetId);
-      setActivePet(updatedDetail);
-    } catch (err) {
-      console.error('Error updating deworming', err);
-    }
+    const updated = await deleteLaboratoryRecord(activePet.id, id);
+    setActivePet(updated);
+    setSelectedLabId(null);
   };
 
-  const handleDeleteDeworming = async (dewormingId: number) => {
+  const handleUpdateMedicalImage = async (id: string, record: any) => {
     if (!activePet) return;
-    try {
-      await deleteDewormingRecord(activePetId, dewormingId);
-      const updatedDetail = await getPetDetail(activePetId);
-      setActivePet(updatedDetail);
-    } catch (err) {
-      console.error('Error deleting deworming', err);
-    }
+    const updated = await updateMedicalImageRecord(activePet.id, id, record);
+    setActivePet(updated);
   };
 
-  const handleUpdateLaboratory = async (labId: string, record: any) => {
+  const handleDeleteMedicalImage = async (id: string) => {
     if (!activePet) return;
-    try {
-      await updateLaboratoryRecord(activePetId, labId, record);
-      const updatedDetail = await getPetDetail(activePetId);
-      setActivePet(updatedDetail);
-    } catch (err) {
-      console.error('Error updating laboratory record', err);
-    }
+    const updated = await deleteMedicalImageRecord(activePet.id, id);
+    setActivePet(updated);
   };
 
-  const handleDeleteLaboratory = async (labId: string) => {
+  const handleUpdatePetProfile = async (field: string, value: string) => {
     if (!activePet) return;
-    try {
-      await deleteLaboratoryRecord(activePetId, labId);
-      const updatedDetail = await getPetDetail(activePetId);
-      setActivePet(updatedDetail);
-    } catch (err) {
-      console.error('Error deleting laboratory record', err);
-    }
+    const updated = await updatePetProfile(activePet.id, { [field]: value });
+    setActivePet(updated);
   };
 
-  const handleUpdateMedicalImage = async (imageId: number, record: any) => {
+  const handleUpdatePetOwner = async (field: string, value: string) => {
     if (!activePet) return;
-    try {
-      await updateMedicalImageRecord(activePetId, imageId, record);
-      const updatedDetail = await getPetDetail(activePetId);
-      setActivePet(updatedDetail);
-    } catch (err) {
-      console.error('Error updating medical image record', err);
-    }
+    const updated = await updatePetOwner(activePet.id, { [field]: value });
+    setActivePet(updated);
   };
 
-  const handleDeleteMedicalImage = async (imageId: number) => {
+  const handleAlertAction = async (id: string, action: 'solucionar' | 'posponer' | 'olvidar') => {
     if (!activePet) return;
-    try {
-      await deleteMedicalImageRecord(activePetId, imageId);
-      const updatedDetail = await getPetDetail(activePetId);
-      setActivePet(updatedDetail);
-    } catch (err) {
-      console.error('Error deleting medical image record', err);
-    }
+    const updated = await updateAlertAction(activePet.id, id, action);
+    setActivePet(updated);
   };
 
-
-
-  // Loading Screen
-  if (loading || !activePet) {
+  if (loading && !activePet) {
     return (
-      <div className="w-full min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="w-full max-w-md h-[812px] bg-white flex flex-col items-center justify-center p-6 rounded-[40px] shadow-2xl border border-gray-200">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[#00AEEF] mb-4"></div>
-          <p className="text-sm font-semibold text-gray-500">Cargando Ficha Médica...</p>
-        </div>
+      <div className="w-full min-h-screen bg-slate-900 flex flex-col items-center justify-center text-white">
+        <div className="w-12 h-12 border-4 border-[#00AEEF] border-t-transparent rounded-full animate-spin mb-4" />
+        <h2 className="font-black text-lg">Cargando Sania Pet...</h2>
+        <p className="text-xs text-slate-400 mt-1">Conectando a base de datos ultrarrápida Go</p>
       </div>
     );
   }
 
-  // Render content depending on navigation state
+  if (!activePet) return null;
+
+  // Active Screen / View Router
   const renderContent = () => {
     if (activeScreen === 'consultas') {
       return (
         <Consultas 
-          diagnosticos={activePet.diagnosticos} 
           onBack={handleBack} 
+          diagnosticos={activePet.diagnosticos || []} 
           onUpdateDiagnosis={handleUpdateDiagnosis}
           onDeleteDiagnosis={handleDeleteDiagnosis}
         />
@@ -385,8 +307,8 @@ function AppContent() {
     if (activeScreen === 'vacunas') {
       return (
         <Vacunas 
-          vacunas={activePet.vacunas} 
           onBack={handleBack} 
+          vacunas={activePet.vacunas} 
           onUpdateVaccine={handleUpdateVaccine}
           onDeleteVaccine={handleDeleteVaccine}
         />
@@ -396,8 +318,8 @@ function AppContent() {
     if (activeScreen === 'desparasitaciones') {
       return (
         <Desparasitaciones 
-          desparasitaciones={activePet.desparasitaciones} 
           onBack={handleBack} 
+          desparasitaciones={activePet.desparasitaciones || []} 
           onUpdateDeworming={handleUpdateDeworming}
           onDeleteDeworming={handleDeleteDeworming}
         />
@@ -407,8 +329,8 @@ function AppContent() {
     if (activeScreen === 'medicamentos') {
       return (
         <Medicamentos 
-          medicamentos={activePet.medicamentos} 
           onBack={handleBack} 
+          medicamentos={activePet.medicamentos} 
           onUpdateMedication={handleUpdateMedication}
           onDeleteMedication={handleDeleteMedication}
         />
@@ -418,24 +340,25 @@ function AppContent() {
     if (activeScreen === 'laboratorios') {
       return (
         <LaboratoriosList 
-          laboratorios={activePet.laboratorios} 
           onBack={handleBack} 
+          laboratorios={activePet.laboratorios} 
           onSelectLab={(id) => {
             setSelectedLabId(id);
             setActiveScreen('laboratorios-detalle');
-          }} 
+          }}
         />
       );
     }
 
-    if (activeScreen === 'laboratorios-detalle') {
+    if (activeScreen === 'laboratorios-detalle' && selectedLabId) {
+      const lab = activePet.laboratorios.find(l => l.id === selectedLabId);
+      if (!lab) return null;
       return (
         <LaboratoriosDetalle 
-          pet={activePet} 
-          labId={selectedLabId || ''} 
           onBack={() => setActiveScreen('laboratorios')} 
-          onUpdateLaboratory={handleUpdateLaboratory}
-          onDeleteLaboratory={handleDeleteLaboratory}
+          lab={lab} 
+          onUpdateLaboratory={(record) => handleUpdateLaboratory(lab.id, record)}
+          onDeleteLaboratory={() => handleDeleteLaboratory(lab.id)}
         />
       );
     }
@@ -443,10 +366,10 @@ function AppContent() {
     if (activeScreen === 'imagenes') {
       return (
         <ImagenesMedicas 
-          imagenes={activePet.imagenes} 
           onBack={handleBack} 
-          onUpdateMedicalImage={handleUpdateMedicalImage}
-          onDeleteMedicalImage={handleDeleteMedicalImage}
+          imagenes={activePet.imagenesMedicas} 
+          onUpdateImage={handleUpdateMedicalImage}
+          onDeleteImage={handleDeleteMedicalImage}
         />
       );
     }
@@ -454,38 +377,47 @@ function AppContent() {
     if (activeScreen === 'perfil-detalle') {
       return (
         <PerfilMascota 
+          onBack={handleBack} 
           pet={activePet} 
-          onUpdatePetProfile={handleUpdatePetProfile}
-          onUpdatePetOwner={handleUpdatePetOwner}
+          onUpdateField={handleUpdatePetProfile}
+          onUpdateOwner={handleUpdatePetOwner}
         />
       );
     }
 
     if (activeScreen === 'mapet-servicios') {
       return (
-        <MapetServicios 
-          onBack={handleBack}
-          activePet={activePet}
-          allPets={petsList.length > 0 ? petsList : (activePet ? [activePet] : [])}
-          initialMode="servicios"
-        />
+        <Suspense fallback={<div className="p-8 text-center text-gray-500 font-bold">Cargando Mapa interactivo...</div>}>
+          <MapetServicios 
+            onBack={handleBack}
+            activePet={activePet}
+            allPets={petsList.length > 0 ? petsList : [activePet]}
+            initialMode="servicios"
+          />
+        </Suspense>
       );
     }
 
     if (activeScreen === 'mapet-servicios-sos') {
       return (
-        <MapetServicios 
-          onBack={handleBack}
-          activePet={activePet}
-          allPets={petsList.length > 0 ? petsList : (activePet ? [activePet] : [])}
-          initialMode="sos"
-          openReportModalOnMount={true}
-        />
+        <Suspense fallback={<div className="p-8 text-center text-gray-500 font-bold">Cargando Radar SOS...</div>}>
+          <MapetServicios 
+            onBack={handleBack}
+            activePet={activePet}
+            allPets={petsList.length > 0 ? petsList : [activePet]}
+            initialMode="sos"
+            openReportModalOnMount={true}
+          />
+        </Suspense>
       );
     }
 
     if (activeScreen === 'admin-portal') {
-      return <AdminPortal onBackToApp={() => setActiveScreen(null)} />;
+      return (
+        <Suspense fallback={<div className="p-8 text-center text-gray-500 font-bold">Cargando Panel SuperAdmin...</div>}>
+          <AdminPortal onBackToApp={() => setActiveScreen(null)} />
+        </Suspense>
+      );
     }
 
     if (activeScreen === 'alertas-detalle') {
@@ -504,12 +436,14 @@ function AppContent() {
         );
       case 'mapa':
         return (
-          <MapetServicios 
-            onBack={() => setActiveTab('home')}
-            activePet={activePet}
-            allPets={petsList.length > 0 ? petsList : (activePet ? [activePet] : [])}
-            initialMode="servicios"
-          />
+          <Suspense fallback={<div className="p-8 text-center text-gray-500 font-bold">Cargando Mapa...</div>}>
+            <MapetServicios 
+              onBack={() => setActiveTab('home')}
+              activePet={activePet}
+              allPets={petsList.length > 0 ? petsList : [activePet]}
+              initialMode="servicios"
+            />
+          </Suspense>
         );
       case 'diario':
         return (
@@ -525,7 +459,6 @@ function AppContent() {
         );
         return (
           <div className="flex-1 overflow-auto pb-24 bg-gray-50/50">
-            {/* Header */}
             <div className="bg-gradient-to-r from-red-500 to-[#1A5AD7] p-5 pb-6 rounded-b-3xl text-white shadow-md">
               <div className="flex items-center gap-3">
                 <div className="bg-white/20 p-2 rounded-xl">
@@ -544,7 +477,7 @@ function AppContent() {
                   <div 
                     key={alert.id}
                     onClick={() => setSelectedAlertForAction(alert)}
-                    className={`bg-white rounded-3xl p-5 shadow-sm border relative overflow-hidden flex items-start gap-3.5 cursor-pointer hover:border-gray-200 transition-all active:scale-[0.99] ${
+                    className={`bg-white rounded-3xl p-5 shadow-xs border relative overflow-hidden flex items-start gap-3.5 cursor-pointer hover:border-gray-200 transition-all active:scale-[0.99] ${
                       alert.tipo === 'critica' ? 'border-red-100' : 'border-amber-100'
                     }`}
                   >
@@ -584,39 +517,260 @@ function AppContent() {
       case 'perfil':
         return (
           <PerfilMascota 
+            onBack={() => setActiveTab('home')} 
             pet={activePet} 
-            onUpdatePetProfile={handleUpdatePetProfile}
-            onUpdatePetOwner={handleUpdatePetOwner}
+            onUpdateField={handleUpdatePetProfile}
+            onUpdateOwner={handleUpdatePetOwner}
           />
         );
       default:
-        return <Dashboard activePet={activePet} onNavigate={handleNavigate} />;
+        return null;
     }
   };
 
+  // Nav Items for Desktop Sidebar
+  const navItems = [
+    { id: 'home', label: 'Inicio', icon: Home, tab: 'home' },
+    { id: 'mapa', label: 'Mapa & Radar SOS', icon: MapPin, tab: 'mapa', badge: 'SOS' },
+    { id: 'diario', label: 'Diario de Salud', icon: ClipboardList, tab: 'diario' },
+    { id: 'consultas', label: 'Consultas Médicas', icon: Stethoscope, screen: 'consultas' },
+    { id: 'vacunas', label: 'Vacunas', icon: ShieldCheck, screen: 'vacunas' },
+    { id: 'desparasitaciones', label: 'Desparasitaciones', icon: Bug, screen: 'desparasitaciones' },
+    { id: 'medicamentos', label: 'Tratamientos', icon: Pill, screen: 'medicamentos' },
+    { id: 'laboratorios', label: 'Laboratorios', icon: FlaskConical, screen: 'laboratorios' },
+    { id: 'imagenes', label: 'Imágenes Médicas', icon: ImageIcon, screen: 'imagenes' },
+    { id: 'alertas', label: 'Alertas Sanitarias', icon: Bell, tab: 'alertas' },
+  ];
+
   return (
-    <div className="w-full min-h-screen bg-gray-100 flex items-center justify-center py-0 sm:py-8">
-      <div className="w-full max-w-md min-h-screen sm:min-h-[812px] sm:h-[812px] bg-gray-50 flex flex-col relative overflow-hidden sm:rounded-[40px] sm:shadow-2xl border border-gray-200/50">
-        
-        <Header 
-          activePet={activePet} 
-          allPets={petsList.length > 0 ? petsList : [activePet]} 
-          onSelectPet={handleSelectPet}
-          onOpenAddPet={() => setShowAddPetModal(true)}
-          onOpenSettings={() => alert('Configuración: Simulación de ajustes.')}
-          onOpenAdmin={() => setActiveScreen('admin-portal')}
-        />
-        
-        {renderContent()}
-        
-        {/* Bottom Nav Bar */}
-        <BottomNav
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-          onAddClick={() => setShowAddMenu(true)}
-          alertCount={activePet.alertas ? activePet.alertas.filter(a => !a.estado || a.estado === 'activa').length : 0}
-        />
-        
+    <div className="w-full min-h-screen bg-slate-100 flex flex-col md:flex-row font-sans text-gray-800">
+      {/* ========================================================================= */}
+      {/* 🖥️ DESKTOP SIDEBAR NAVIGATION (Visible on screens md: and larger)         */}
+      {/* ========================================================================= */}
+      <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200/80 p-5 shrink-0 shadow-xs justify-between min-h-screen sticky top-0 h-screen overflow-y-auto">
+        <div className="space-y-5">
+          {/* Brand Logo Header */}
+          <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 bg-gradient-to-br from-[#00AEEF] to-[#1A5AD7] rounded-xl flex items-center justify-center shadow-xs">
+                <Activity className="w-5 h-5 text-white stroke-[2.5]" />
+              </div>
+              <div>
+                <h1 className="font-black text-gray-900 text-base leading-none">Sania Pet</h1>
+                <p className="text-[10px] text-gray-400 font-bold uppercase mt-0.5">Gestión Clínica</p>
+              </div>
+            </div>
+            <span className="text-[9px] font-black uppercase bg-[#E6F7FF] text-[#00AEEF] px-2 py-0.5 rounded-full">
+              v2.0 Go
+            </span>
+          </div>
+
+          {/* Active Pet Selector Card */}
+          <div className="bg-slate-50 border border-gray-200/70 p-3 rounded-2xl">
+            <div className="flex items-center gap-2.5 mb-2">
+              <img 
+                src={activePet.foto} 
+                alt={activePet.nombre} 
+                className="w-10 h-10 rounded-xl object-cover border border-gray-200 shadow-xs"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMTgiIGZpbGw9IiNFM0YyRkQiLz48dGV4dCB4PSI1MCUiIHk9IjU1JSIgZm9udC1zaXplPSIxNiIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0iIzE1NjVDNCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+UEVUPC90ZXh0Pjwvc3ZnPg==';
+                }}
+              />
+              <div className="flex-1 min-w-0">
+                <label className="text-[9px] text-gray-400 font-black block uppercase tracking-wider">
+                  Mascota Activa
+                </label>
+                <div className="relative">
+                  <select
+                    value={activePet.id}
+                    onChange={(e) => {
+                      if (e.target.value === '__NEW_PET__') {
+                        setShowAddPetModal(true);
+                      } else {
+                        handleSelectPet(e.target.value);
+                      }
+                    }}
+                    className="font-black text-gray-900 pr-5 bg-transparent appearance-none border-none outline-none cursor-pointer text-xs w-full truncate"
+                  >
+                    {petsList.map((pet) => (
+                      <option key={pet.id} value={pet.id}>
+                        {pet.nombre} ({pet.especie})
+                      </option>
+                    ))}
+                    <option value="__NEW_PET__" className="text-[#00AEEF] font-black">
+                      + Agregar nueva mascota...
+                    </option>
+                  </select>
+                  <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-0 top-1 pointer-events-none" />
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowAddPetModal(true)}
+              className="w-full py-1.5 bg-white hover:bg-blue-50 text-[#00AEEF] text-[10px] font-black rounded-xl border border-gray-200/80 transition-colors flex items-center justify-center gap-1 shadow-xs"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Nueva Mascota</span>
+            </button>
+          </div>
+
+          {/* Quick Action Button: (+ Nuevo Registro) */}
+          <button
+            onClick={() => setShowAddMenu(true)}
+            className="w-full py-3 bg-[#00AEEF] hover:bg-[#0099D6] active:scale-[0.98] text-white rounded-2xl text-xs font-black shadow-md transition-all flex items-center justify-center gap-2"
+          >
+            <Plus className="w-4 h-4 stroke-[3]" />
+            <span>+ Nuevo Registro</span>
+          </button>
+
+          {/* Navigation Links */}
+          <nav className="space-y-1">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = item.screen ? activeScreen === item.screen : activeTab === item.tab && !activeScreen;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    if (item.screen) {
+                      setActiveScreen(item.screen);
+                    } else if (item.tab) {
+                      handleTabChange(item.tab);
+                    }
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-black transition-colors ${
+                    isActive
+                      ? 'bg-[#E6F7FF] text-[#00AEEF] shadow-xs'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-[#00AEEF]' : 'text-gray-400'}`} />
+                    <span>{item.label}</span>
+                  </div>
+                  {item.badge && (
+                    <span className="text-[9px] bg-red-500 text-white font-black px-1.5 py-0.2 rounded-full uppercase animate-pulse">
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+
+            {/* SuperAdmin Sidebar Link (if admin) */}
+            {isAdmin && (
+              <button
+                onClick={() => setActiveScreen('admin-portal')}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-black transition-colors mt-2 ${
+                  activeScreen === 'admin-portal'
+                    ? 'bg-purple-100 text-purple-700 shadow-xs'
+                    : 'text-purple-700 bg-purple-50 hover:bg-purple-100/70 border border-purple-200/60'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Shield className="w-4 h-4 text-purple-600" />
+                  <span>SuperAdmin Portal</span>
+                </div>
+                <span className="text-[8px] bg-purple-600 text-white font-black px-1.5 py-0.5 rounded-full uppercase">
+                  ROOT
+                </span>
+              </button>
+            )}
+          </nav>
+        </div>
+
+        {/* Sidebar Footer: User profile & Auth */}
+        <div className="pt-4 border-t border-gray-100">
+          {isAuthenticated ? (
+            <div className="flex items-center justify-between bg-gray-50 p-2.5 rounded-2xl border border-gray-200/60">
+              <div className="min-w-0 pr-2">
+                <div className="text-xs font-black text-gray-900 truncate">{user?.nombre || user?.email}</div>
+                <div className="text-[9px] font-bold text-[#00AEEF] uppercase">{user?.rol}</div>
+              </div>
+              <button
+                onClick={() => logout()}
+                className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors shrink-0"
+                title="Cerrar sesión"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => openAuthModal('login')}
+              className="w-full py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-black rounded-xl transition-colors flex items-center justify-center gap-2 shadow-xs"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Iniciar Sesión</span>
+            </button>
+          )}
+        </div>
+      </aside>
+
+      {/* ========================================================================= */}
+      {/* 📱 MOBILE FRAME OR 🖥️ DESKTOP MAIN WORKSPACE                               */}
+      {/* ========================================================================= */}
+      <main className="flex-1 flex flex-col min-h-screen bg-gray-50 md:bg-slate-100/60 overflow-x-hidden">
+        {/* Mobile Header (Hidden on Desktop) */}
+        <div className="block md:hidden">
+          <Header 
+            activePet={activePet} 
+            allPets={petsList.length > 0 ? petsList : [activePet]} 
+            onSelectPet={handleSelectPet}
+            onOpenAddPet={() => setShowAddPetModal(true)}
+            onOpenSettings={() => alert('Configuración: Simulación de ajustes.')}
+            onOpenAdmin={() => setActiveScreen('admin-portal')}
+          />
+        </div>
+
+        {/* Desktop Top Header Bar */}
+        <div className="hidden md:flex items-center justify-between px-8 py-4 bg-white border-b border-gray-200/80 sticky top-0 z-20">
+          <div className="flex items-center gap-3">
+            <h2 className="text-xl font-black text-gray-900 capitalize">
+              {activeScreen ? activeScreen.replace('-', ' ') : activeTab === 'home' ? 'Panel General' : activeTab}
+            </h2>
+            <span className="text-xs text-gray-400 font-semibold">• Mascota: <strong>{activePet.nombre}</strong></span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {isAdmin && (
+              <button
+                onClick={() => setActiveScreen('admin-portal')}
+                className="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-xl text-xs font-black border border-purple-200 flex items-center gap-1.5 transition-colors"
+              >
+                <Shield className="w-3.5 h-3.5" />
+                <span>Panel SuperAdmin</span>
+              </button>
+            )}
+
+            {!isAuthenticated && (
+              <button
+                onClick={() => openAuthModal('login')}
+                className="px-4 py-1.5 bg-[#00AEEF] hover:bg-[#0099D6] text-white rounded-xl text-xs font-black transition-colors"
+              >
+                Ingresar
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col">
+          {renderContent()}
+        </div>
+
+        {/* Mobile Bottom Navigation (Hidden on Desktop) */}
+        <div className="block md:hidden">
+          <BottomNav
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+            onAddClick={() => setShowAddMenu(true)}
+            alertCount={activePet.alertas ? activePet.alertas.filter(a => !a.estado || a.estado === 'activa').length : 0}
+          />
+        </div>
+
+        {/* Modals & Dialogs */}
         {showAddPetModal && (
           <AddPetModal 
             onClose={() => setShowAddPetModal(false)}
@@ -624,24 +778,12 @@ function AppContent() {
           />
         )}
 
+        {/* Contextual Action Menu (Always opens full options menu) */}
         {showAddMenu && (
           <AddMenu 
             onClose={() => setShowAddMenu(false)} 
             onAddRecord={handleAddRecord}
-            initialOption={(() => {
-              if (activeScreen === 'consultas') return 'diagnostico';
-              if (activeScreen === 'vacunas') return 'vacuna';
-              if (activeScreen === 'desparasitaciones') return 'desparasitacion';
-              if (activeScreen === 'medicamentos') return 'medicamento';
-              if (activeScreen === 'laboratorios' || activeScreen === 'laboratorios-detalle') return 'laboratorio';
-              if (activeScreen === 'imagenes') return 'imagen';
-              
-              if (!activeScreen) {
-                if (activeTab === 'diario') return 'sintoma';
-                if (activeTab === 'alertas') return 'alerta';
-              }
-              return null;
-            })()}
+            initialOption={null}
           />
         )}
 
@@ -651,10 +793,8 @@ function AppContent() {
             className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
             onClick={() => setSelectedAlertForAction(null)}
           >
-            {/* Backdrop */}
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
             
-            {/* Modal content */}
             <div 
               className="relative bg-white rounded-3xl p-6 w-full max-w-sm border border-gray-100 shadow-2xl z-50 animate-in zoom-in-95 duration-200"
               onClick={e => e.stopPropagation()}
@@ -723,9 +863,10 @@ function AppContent() {
             </div>
           </div>
         )}
+
         {/* Global Auth Modal */}
         <AuthModal />
-      </div>
+      </main>
     </div>
   );
 }
