@@ -7,9 +7,10 @@ interface ConsultasProps {
   onBack: () => void;
   onUpdateDiagnosis: (diagnosticoId: number, record: any) => void;
   onDeleteDiagnosis: (diagnosticoId: number) => void;
+  onOpenReceta?: () => void;
 }
 
-export default function Consultas({ diagnosticos, onBack, onUpdateDiagnosis, onDeleteDiagnosis }: ConsultasProps) {
+export default function Consultas({ diagnosticos, onBack, onUpdateDiagnosis, onDeleteDiagnosis, onOpenReceta }: ConsultasProps) {
   const [filter, setFilter] = useState('todos');
 
   // Edit form states
@@ -93,13 +94,25 @@ export default function Consultas({ diagnosticos, onBack, onUpdateDiagnosis, onD
     <div className="flex-1 overflow-auto pb-24 bg-gray-50/50">
       {/* Header */}
       <div className="bg-gradient-to-r from-[#00AEEF] to-[#1A5AD7] p-5 pb-6 rounded-b-3xl text-white shadow-md">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-1.5 text-white/90 mb-3 hover:text-white transition-colors group"
-        >
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-          <span className="text-xs font-semibold">Volver</span>
-        </button>
+        <div className="flex items-center justify-between mb-3">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-1.5 text-white/90 hover:text-white transition-colors group cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+            <span className="text-xs font-semibold">Volver</span>
+          </button>
+
+          {onOpenReceta && (
+            <button
+              onClick={onOpenReceta}
+              className="px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white rounded-xl text-xs font-black backdrop-blur-xs flex items-center gap-1.5 transition-all shadow-xs active:scale-95 cursor-pointer"
+            >
+              <span>📄 Imprimir Ficha</span>
+            </button>
+          )}
+        </div>
+
         <div className="flex items-center gap-3">
           <div className="bg-white/20 p-2 rounded-xl">
             <Stethoscope className="w-6 h-6" />

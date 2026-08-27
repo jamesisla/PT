@@ -45,18 +45,19 @@ import DiarioSalud from './components/DiarioSalud';
 import PerfilMascota from './components/PerfilMascota';
 import AddMenu from './components/AddMenu';
 import AddPetModal from './components/AddPetModal';
+import AdminPortal from './components/AdminPortal';
 import AuthModal from './components/AuthModal';
+import RecetaModal from './components/RecetaModal';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { 
   AlertTriangle, Bell, Info, Clock, Check, Trash2, X,
   Home, MapPin, ClipboardList, Stethoscope, ShieldCheck,
   Bug, Pill, FlaskConical, Image as ImageIcon, Plus, Shield,
-  User, LogIn, LogOut, ChevronDown, Activity
+  User, LogIn, LogOut, ChevronDown, Activity, Search, Printer
 } from 'lucide-react';
 
-// Code splitting / Lazy Loading for heavy modules
+// Code splitting / Lazy Loading for map module
 const MapetServicios = lazy(() => import('./components/MapetServicios'));
-const AdminPortal = lazy(() => import('./components/AdminPortal'));
 
 function AppContent() {
   const { user, isAuthenticated, isAdmin, openAuthModal, logout } = useAuth();
@@ -68,6 +69,9 @@ function AppContent() {
   const [selectedLabId, setSelectedLabId] = useState<string | null>(null);
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [showAddPetModal, setShowAddPetModal] = useState(false);
+  const [showRecetaModal, setShowRecetaModal] = useState(false);
+  const [showPatientSearch, setShowPatientSearch] = useState(false);
+  const [patientSearchQuery, setPatientSearchQuery] = useState('');
   const [selectedAlertForAction, setSelectedAlertForAction] = useState<any | null>(null);
 
   // Background non-blocking sync with Go SQLite backend
@@ -105,6 +109,7 @@ function AppContent() {
   const handleSelectPet = (id: string) => {
     setActivePetId(id);
     setActiveScreen(null);
+    setShowPatientSearch(false);
   };
 
   const handleAddPet = async (petData: any) => {
@@ -262,6 +267,19 @@ function AppContent() {
     setActivePet(updated);
   };
 
+  // Filtered patients for clinical search modal
+  const filteredPatients = petsList.filter((p) => {
+    if (!patientSearchQuery) return true;
+    const q = patientSearchQuery.toLowerCase();
+    return (
+      p.nombre?.toLowerCase().includes(q) ||
+      p.especie?.toLowerCase().includes(q) ||
+      p.raza?.toLowerCase().includes(q) ||
+      p.microchip?.toLowerCase().includes(q) ||
+      p.dueno?.toLowerCase().includes(q)
+    );
+  });
+
   // Active Screen / View Router
   const renderContent = () => {
     if (activeScreen === 'consultas') {
@@ -271,6 +289,7 @@ function AppContent() {
           diagnosticos={activePet.diagnosticos || []} 
           onUpdateDiagnosis={handleUpdateDiagnosis}
           onDeleteDiagnosis={handleDeleteDiagnosis}
+          onOpenReceta={() => setShowRecetaModal(true)}
         />
       );
     }
@@ -304,6 +323,7 @@ function AppContent() {
           medicamentos={activePet.medicamentos} 
           onUpdateMedication={handleUpdateMedication}
           onDeleteMedication={handleDeleteMedication}
+          onOpenReceta={() => setShowRecetaModal(true)}
         />
       );
     }
@@ -384,11 +404,7 @@ function AppContent() {
     }
 
     if (activeScreen === 'admin-portal') {
-      return (
-        <Suspense fallback={<div className="p-8 text-center text-gray-500 font-bold">Cargando Panel SuperAdmin...</div>}>
-          <AdminPortal onBackToApp={() => setActiveScreen(null)} />
-        </Suspense>
-      );
+      return <AdminPortal onBackToApp={() => setActiveScreen(null)} />;
     }
 
     if (activeScreen === 'alertas-detalle') {
@@ -519,7 +535,7 @@ function AppContent() {
       {/* 🖥️ DESKTOP SIDEBAR NAVIGATION (Visible on screens md: and larger)         */}
       {/* ========================================================================= */}
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200/80 p-5 shrink-0 shadow-xs justify-between min-h-screen sticky top-0 h-screen overflow-y-auto">
-        <div className="space-y-5">
+        <div className="space-y-4">
           {/* Brand Logo Header */}
           <div className="flex items-center justify-between pb-3 border-b border-gray-100">
             <div className="flex items-center gap-2.5">
@@ -577,19 +593,29 @@ function AppContent() {
               </div>
             </div>
 
-            <button
-              onClick={() => setShowAddPetModal(true)}
-              className="w-full py-1.5 bg-white hover:bg-blue-50 text-[#00AEEF] text-[10px] font-black rounded-xl border border-gray-200/80 transition-colors flex items-center justify-center gap-1 shadow-xs"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Nueva Mascota</span>
-            </button>
+            <div className="grid grid-cols-2 gap-1.5 pt-1 border-t border-gray-200/60">
+              <button
+                onClick={() => setShowPatientSearch(true)}
+                className="py-1.5 bg-white hover:bg-gray-100 text-gray-700 text-[10px] font-bold rounded-xl border border-gray-200 transition-colors flex items-center justify-center gap-1 shadow-xs cursor-pointer"
+                title="Buscar paciente por microchip o nombre"
+              >
+                <Search className="w-3 h-3 text-[#00AEEF]" />
+                <span>Buscar</span>
+              </button>
+              <button
+                onClick={() => setShowAddPetModal(true)}
+                className="py-1.5 bg-white hover:bg-blue-50 text-[#00AEEF] text-[10px] font-bold rounded-xl border border-gray-200 transition-colors flex items-center justify-center gap-1 shadow-xs cursor-pointer"
+              >
+                <Plus className="w-3 h-3" />
+                <span>Nueva</span>
+              </button>
+            </div>
           </div>
 
           {/* Quick Action Button: (+ Nuevo Registro) */}
           <button
             onClick={() => setShowAddMenu(true)}
-            className="w-full py-3 bg-[#00AEEF] hover:bg-[#0099D6] active:scale-[0.98] text-white rounded-2xl text-xs font-black shadow-md transition-all flex items-center justify-center gap-2"
+            className="w-full py-2.5 bg-[#00AEEF] hover:bg-[#0099D6] active:scale-[0.98] text-white rounded-2xl text-xs font-black shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <Plus className="w-4 h-4 stroke-[3]" />
             <span>+ Nuevo Registro</span>
@@ -610,7 +636,7 @@ function AppContent() {
                       handleTabChange(item.tab);
                     }
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-black transition-colors ${
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-black transition-colors ${
                     isActive
                       ? 'bg-[#E6F7FF] text-[#00AEEF] shadow-xs'
                       : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
@@ -633,7 +659,7 @@ function AppContent() {
             {isAdmin && (
               <button
                 onClick={() => setActiveScreen('admin-portal')}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-black transition-colors mt-2 ${
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-black transition-colors mt-2 ${
                   activeScreen === 'admin-portal'
                     ? 'bg-purple-100 text-purple-700 shadow-xs'
                     : 'text-purple-700 bg-purple-50 hover:bg-purple-100/70 border border-purple-200/60'
@@ -652,7 +678,7 @@ function AppContent() {
         </div>
 
         {/* Sidebar Footer: User profile & Auth */}
-        <div className="pt-4 border-t border-gray-100">
+        <div className="pt-3 border-t border-gray-100">
           {isAuthenticated ? (
             <div className="flex items-center justify-between bg-gray-50 p-2.5 rounded-2xl border border-gray-200/60">
               <div className="min-w-0 pr-2">
@@ -661,7 +687,7 @@ function AppContent() {
               </div>
               <button
                 onClick={() => logout()}
-                className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors shrink-0"
+                className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors shrink-0 cursor-pointer"
                 title="Cerrar sesión"
               >
                 <LogOut className="w-4 h-4" />
@@ -670,7 +696,7 @@ function AppContent() {
           ) : (
             <button
               onClick={() => openAuthModal('login')}
-              className="w-full py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-black rounded-xl transition-colors flex items-center justify-center gap-2 shadow-xs"
+              className="w-full py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-black rounded-xl transition-colors flex items-center justify-center gap-2 shadow-xs cursor-pointer"
             >
               <LogIn className="w-3.5 h-3.5" />
               <span>Iniciar Sesión</span>
@@ -690,7 +716,7 @@ function AppContent() {
             allPets={petsList.length > 0 ? petsList : [activePet]} 
             onSelectPet={handleSelectPet}
             onOpenAddPet={() => setShowAddPetModal(true)}
-            onOpenSettings={() => alert('Configuración: Simulación de ajustes.')}
+            onOpenSettings={() => setShowPatientSearch(true)}
             onOpenAdmin={() => setActiveScreen('admin-portal')}
           />
         </div>
@@ -704,7 +730,27 @@ function AppContent() {
             <span className="text-xs text-gray-400 font-semibold">• Mascota: <strong>{activePet.nombre}</strong></span>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            {/* Clinical Patient Quick Search Trigger */}
+            <button
+              onClick={() => setShowPatientSearch(true)}
+              className="px-3.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Buscar paciente por microchip, tutor o nombre"
+            >
+              <Search className="w-3.5 h-3.5 text-[#00AEEF]" />
+              <span>Buscar Paciente</span>
+            </button>
+
+            {/* Print Prescription Trigger */}
+            <button
+              onClick={() => setShowRecetaModal(true)}
+              className="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl text-xs font-black border border-emerald-200 flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Generar receta médica o ficha clínica en PDF"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              <span>Emitir Receta</span>
+            </button>
+
             {/* Prominent Desktop + Agregar Registro Button */}
             <button
               onClick={() => setShowAddMenu(true)}
@@ -718,17 +764,17 @@ function AppContent() {
             {isAdmin && (
               <button
                 onClick={() => setActiveScreen('admin-portal')}
-                className="px-3 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-xl text-xs font-black border border-purple-200 flex items-center gap-1.5 transition-colors"
+                className="px-3 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-xl text-xs font-black border border-purple-200 flex items-center gap-1.5 transition-colors cursor-pointer"
               >
                 <Shield className="w-3.5 h-3.5" />
-                <span>Panel SuperAdmin</span>
+                <span>SuperAdmin</span>
               </button>
             )}
 
             {!isAuthenticated ? (
               <button
                 onClick={() => openAuthModal('login')}
-                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black transition-colors"
+                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black transition-colors cursor-pointer"
               >
                 Ingresar
               </button>
@@ -737,7 +783,7 @@ function AppContent() {
                 <span className="text-xs font-bold text-gray-700">{user?.nombre || user?.email}</span>
                 <button
                   onClick={() => logout()}
-                  className="text-gray-400 hover:text-red-600 transition-colors p-0.5"
+                  className="text-gray-400 hover:text-red-600 transition-colors p-0.5 cursor-pointer"
                   title="Cerrar sesión"
                 >
                   <LogOut className="w-3.5 h-3.5" />
@@ -789,6 +835,91 @@ function AppContent() {
           />
         )}
 
+        {/* Clinical Patient Search Modal */}
+        {showPatientSearch && (
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
+            onClick={() => setShowPatientSearch(false)}
+          >
+            <div 
+              className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="p-4 bg-gradient-to-r from-[#00AEEF] to-[#1A5AD7] text-white flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Search className="w-5 h-5 text-white" />
+                  <h3 className="font-black text-sm">Búsqueda Clínica de Pacientes</h3>
+                </div>
+                <button
+                  onClick={() => setShowPatientSearch(false)}
+                  className="p-1 bg-white/20 rounded-full hover:bg-white/30 text-white"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="p-4 border-b border-gray-100">
+                <div className="relative">
+                  <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
+                  <input
+                    type="text"
+                    autoFocus
+                    value={patientSearchQuery}
+                    onChange={(e) => setPatientSearchQuery(e.target.value)}
+                    placeholder="Buscar por nombre, raza, microchip o tutor..."
+                    className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-bold text-gray-800 outline-none focus:bg-white focus:border-[#00AEEF]"
+                  />
+                </div>
+              </div>
+
+              <div className="max-h-72 overflow-y-auto divide-y divide-gray-100 p-2">
+                {filteredPatients.map((pet) => (
+                  <button
+                    key={pet.id}
+                    onClick={() => handleSelectPet(pet.id)}
+                    className="w-full p-3 flex items-center justify-between hover:bg-blue-50/60 rounded-2xl text-left transition-colors cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={pet.foto}
+                        alt={pet.nombre}
+                        className="w-10 h-10 rounded-xl object-cover border border-gray-200"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMTgiIGZpbGw9IiNFM0YyRkQiLz48dGV4dCB4PSI1MCUiIHk9IjU1JSIgZm9udC1zaXplPSIxNiIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0iIzE1NjVDNCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+UEVUPC90ZXh0Pjwvc3ZnPg==';
+                        }}
+                      />
+                      <div>
+                        <div className="font-black text-gray-900 text-xs flex items-center gap-1.5">
+                          <span>{pet.nombre}</span>
+                          <span className="text-[9px] font-bold text-gray-400 uppercase">({pet.especie})</span>
+                        </div>
+                        <p className="text-[10px] text-gray-500 font-semibold mt-0.5">
+                          Chip: {pet.microchip} • Tutor: {pet.dueno}
+                        </p>
+                      </div>
+                    </div>
+
+                    <span className="text-[10px] font-black text-[#00AEEF] opacity-0 group-hover:opacity-100 transition-opacity">
+                      Abrir Ficha →
+                    </span>
+                  </button>
+                ))}
+
+                {filteredPatients.length === 0 && (
+                  <p className="text-center text-xs text-gray-400 py-6 font-semibold">
+                    No se encontraron pacientes coincidentes.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Printable Medical Prescription Modal */}
+        {showRecetaModal && (
+          <RecetaModal pet={activePet} onClose={() => setShowRecetaModal(false)} />
+        )}
+
         {/* Global Alert Action Modal */}
         {selectedAlertForAction && (
           <div 
@@ -803,7 +934,7 @@ function AppContent() {
             >
               <button 
                 onClick={() => setSelectedAlertForAction(null)} 
-                className="absolute right-4 top-4 p-1.5 bg-gray-50 rounded-full text-gray-400 hover:bg-gray-100 transition-colors"
+                className="absolute right-4 top-4 p-1.5 bg-gray-50 rounded-full text-gray-400 hover:bg-gray-100 transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -832,7 +963,7 @@ function AppContent() {
                     handleAlertAction(selectedAlertForAction.id, 'solucionar');
                     setSelectedAlertForAction(null);
                   }}
-                  className="w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs uppercase tracking-wider py-3.5 rounded-2xl shadow-md transition-all active:scale-[0.98]"
+                  className="w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs uppercase tracking-wider py-3.5 rounded-2xl shadow-md transition-all active:scale-[0.98] cursor-pointer"
                 >
                   <Check className="w-4 h-4 stroke-[2.5]" />
                   Marcar como Solucionado
@@ -844,7 +975,7 @@ function AppContent() {
                       handleAlertAction(selectedAlertForAction.id, 'posponer');
                       setSelectedAlertForAction(null);
                     }}
-                    className="flex-1 flex items-center justify-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white font-black text-xs uppercase tracking-wider py-3.5 rounded-2xl shadow-md transition-all active:scale-[0.98]"
+                    className="flex-1 flex items-center justify-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-white font-black text-xs uppercase tracking-wider py-3.5 rounded-2xl shadow-md transition-all active:scale-[0.98] cursor-pointer"
                   >
                     <Clock className="w-4 h-4 stroke-[2.5]" />
                     Posponer
@@ -855,7 +986,7 @@ function AppContent() {
                       handleAlertAction(selectedAlertForAction.id, 'olvidar');
                       setSelectedAlertForAction(null);
                     }}
-                    className="flex-1 flex items-center justify-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-black text-xs uppercase tracking-wider py-3.5 rounded-2xl transition-all active:scale-[0.98]"
+                    className="flex-1 flex items-center justify-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-black text-xs uppercase tracking-wider py-3.5 rounded-2xl transition-all active:scale-[0.98] cursor-pointer"
                   >
                     <Trash2 className="w-4 h-4" />
                     Olvidar

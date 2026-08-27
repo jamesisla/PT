@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Pill, Calendar, Clock, User, CheckCircle2, Pencil, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Pill, Calendar, Clock, User, CheckCircle2, Pencil, Trash2, X, Printer } from 'lucide-react';
 import { Medicamento } from '../data/petData';
 
 interface MedicamentosProps {
@@ -7,9 +7,10 @@ interface MedicamentosProps {
   onBack: () => void;
   onUpdateMedication: (medicamentoId: number, record: any) => void;
   onDeleteMedication: (medicamentoId: number) => void;
+  onOpenReceta?: () => void;
 }
 
-export default function Medicamentos({ medicamentos, onBack, onUpdateMedication, onDeleteMedication }: MedicamentosProps) {
+export default function Medicamentos({ medicamentos, onBack, onUpdateMedication, onDeleteMedication, onOpenReceta }: MedicamentosProps) {
   const activeMeds = medicamentos.filter(m => m.estado === 'Activo');
   const completedMeds = medicamentos.filter(m => m.estado === 'Completado');
 
@@ -54,13 +55,26 @@ export default function Medicamentos({ medicamentos, onBack, onUpdateMedication,
     <div className="flex-1 overflow-auto pb-24 bg-gray-50/50">
       {/* Header */}
       <div className="bg-gradient-to-r from-[#00AEEF] to-[#1A5AD7] p-5 pb-6 rounded-b-3xl text-white shadow-md">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-1.5 text-white/90 mb-3 hover:text-white transition-colors group"
-        >
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
-          <span className="text-xs font-semibold">Volver</span>
-        </button>
+        <div className="flex items-center justify-between mb-3">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-1.5 text-white/90 hover:text-white transition-colors group cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+            <span className="text-xs font-semibold">Volver</span>
+          </button>
+
+          {onOpenReceta && (
+            <button
+              onClick={onOpenReceta}
+              className="px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white rounded-xl text-xs font-black backdrop-blur-xs flex items-center gap-1.5 transition-all shadow-xs active:scale-95 cursor-pointer"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              <span>Imprimir Receta</span>
+            </button>
+          )}
+        </div>
+
         <div className="flex items-center gap-3">
           <div className="bg-white/20 p-2 rounded-xl">
             <Pill className="w-6 h-6" />

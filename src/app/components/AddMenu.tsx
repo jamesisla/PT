@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { ClipboardList, Scale, Syringe, Calendar, Bell, X, Check, Pill, Stethoscope, Bug, FlaskConical, Image as ImageIcon, ArrowLeft, AlertTriangle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 interface AddMenuProps {
   onClose: () => void;
@@ -8,7 +9,11 @@ interface AddMenuProps {
 }
 
 export default function AddMenu({ onClose, onAddRecord, initialOption = null }: AddMenuProps) {
+  const { user } = useAuth();
   const [selectedOption, setSelectedOption] = useState<string | null>(initialOption);
+
+  const defaultDoctor = user?.rol === 'veterinario' ? user.nombre : '';
+  const defaultClinica = user?.rol === 'veterinario' ? 'Hospital Veterinario Sania Pet' : '';
   
   // Form states
   const [sintoma, setSintoma] = useState('');
@@ -28,20 +33,20 @@ export default function AddMenu({ onClose, onAddRecord, initialOption = null }: 
   const [medDosis, setMedDosis] = useState('');
   const [medFrecuencia, setMedFrecuencia] = useState('');
   const [medDuracion, setMedDuracion] = useState('');
-  const [medVeterinario, setMedVeterinario] = useState('');
+  const [medVeterinario, setMedVeterinario] = useState(defaultDoctor);
 
   const [diagTipo, setDiagTipo] = useState<'Consulta General' | 'Urgencia' | 'Especialidad'>('Consulta General');
   const [diagDescripcion, setDiagDescripcion] = useState('');
-  const [diagDoctor, setDiagDoctor] = useState('');
+  const [diagDoctor, setDiagDoctor] = useState(defaultDoctor);
   const [diagEstado, setDiagEstado] = useState('Resuelto');
-  const [diagClinica, setDiagClinica] = useState('');
+  const [diagClinica, setDiagClinica] = useState(defaultClinica);
 
   const [despTipo, setDespTipo] = useState<'Interna' | 'Externa'>('Interna');
   const [despProducto, setDespProducto] = useState('');
   const [despDosis, setDespDosis] = useState('');
   const [despPesoMascota, setDespPesoMascota] = useState('');
   const [despProximaFecha, setDespProximaFecha] = useState('');
-  const [despVeterinario, setDespVeterinario] = useState('');
+  const [despVeterinario, setDespVeterinario] = useState(defaultDoctor);
 
   // Lab Form states
   const [labExamen, setLabExamen] = useState('');

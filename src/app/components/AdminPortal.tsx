@@ -20,7 +20,15 @@ export default function AdminPortal({ onBackToApp }: AdminPortalProps) {
   const [activeTab, setActiveTab] = useState<'kpis' | 'users' | 'analytics' | 'backups' | 'pets'>('kpis');
 
   // Stats state
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<any>(() => ({
+    totalUsers: 3,
+    totalPets: 2,
+    activeAlerts: 1,
+    totalServices: 6,
+    activeLostPets: 2,
+    totalEvents: 10,
+    dbSize: "0.1 MB"
+  }));
   const [loading, setLoading] = useState(false);
 
   // Users state

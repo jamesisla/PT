@@ -34,12 +34,16 @@ func Routes() chi.Router {
 func GetDashboardStats(w http.ResponseWriter, r *http.Request) {
 	var totalUsers, totalPets, totalAlerts, totalServices, totalLostPets, totalEvents int
 
-	_ = database.DB.QueryRow("SELECT COUNT(*) FROM usuarios").Scan(&totalUsers)
-	_ = database.DB.QueryRow("SELECT COUNT(*) FROM mascotas").Scan(&totalPets)
-	_ = database.DB.QueryRow("SELECT COUNT(*) FROM alertas WHERE estado = 'activa'").Scan(&totalAlerts)
-	_ = database.DB.QueryRow("SELECT COUNT(*) FROM servicios_pet").Scan(&totalServices)
-	_ = database.DB.QueryRow("SELECT COUNT(*) FROM mascotas_perdidas WHERE estado = 'perdida'").Scan(&totalLostPets)
-	_ = database.DB.QueryRow("SELECT COUNT(*) FROM analytics_events").Scan(&totalEvents)
+	query := `
+		SELECT 
+			(SELECT COUNT(*) FROM usuarios),
+			(SELECT COUNT(*) FROM mascotas),
+			(SELECT COUNT(*) FROM alertas WHERE estado = 'activa'),
+			(SELECT COUNT(*) FROM servicios_pet),
+			(SELECT COUNT(*) FROM mascotas_perdidas WHERE estado = 'perdida'),
+			(SELECT COUNT(*) FROM analytics_events)
+	`
+	_ = database.DB.QueryRow(query).Scan(&totalUsers, &totalPets, &totalAlerts, &totalServices, &totalLostPets, &totalEvents)
 
 	dbSize := "0.1 MB"
 	if fi, err := os.Stat("saniapet.db"); err == nil {
