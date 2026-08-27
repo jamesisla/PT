@@ -186,9 +186,8 @@ func GetPetDetail(w http.ResponseWriter, r *http.Request) {
 
 	// 7. Laboratorios
 	lRows, _ := database.DB.Query("SELECT id, fecha, examen, laboratorio, telefono, sitio_web, direccion, convenio, director_tecnico, notas_generales FROM laboratorios WHERE mascota_id = ? ORDER BY id DESC", petID)
-	pet.Laboratorios = []models.Laboratorio{}
+	var rawLabs []models.Laboratorio
 	if lRows != nil {
-		defer lRows.Close()
 		for lRows.Next() {
 			var l models.Laboratorio
 			var lab, tel, web, dir, conv, dt, notas sql.NullString
@@ -200,25 +199,29 @@ func GetPetDetail(w http.ResponseWriter, r *http.Request) {
 			l.Convenio = conv.String
 			l.DirectorTecnico = dt.String
 			l.NotasGenerales = notas.String
-
-			// Results for lab
-			resRows, _ := database.DB.Query("SELECT id, nombre, resultado, unidad, rango_referencia, estado FROM laboratorio_resultados WHERE laboratorio_id = ?", l.ID)
-			l.Resultados = []models.LabResult{}
-			if resRows != nil {
-				for resRows.Next() {
-					var r models.LabResult
-					var res, un, rr, est sql.NullString
-					_ = resRows.Scan(&r.ID, &r.Nombre, &res, &un, &rr, &est)
-					r.Resultado = res.String
-					r.Unidad = un.String
-					r.RangoReferencia = rr.String
-					r.Estado = est.String
-					l.Resultados = append(l.Resultados, r)
-				}
-				resRows.Close()
-			}
-			pet.Laboratorios = append(pet.Laboratorios, l)
+			rawLabs = append(rawLabs, l)
 		}
+		lRows.Close()
+	}
+
+	pet.Laboratorios = []models.Laboratorio{}
+	for _, l := range rawLabs {
+		resRows, _ := database.DB.Query("SELECT id, nombre, resultado, unidad, rango_referencia, estado FROM laboratorio_resultados WHERE laboratorio_id = ?", l.ID)
+		l.Resultados = []models.LabResult{}
+		if resRows != nil {
+			for resRows.Next() {
+				var r models.LabResult
+				var res, un, rr, est sql.NullString
+				_ = resRows.Scan(&r.ID, &r.Nombre, &res, &un, &rr, &est)
+				r.Resultado = res.String
+				r.Unidad = un.String
+				r.RangoReferencia = rr.String
+				r.Estado = est.String
+				l.Resultados = append(l.Resultados, r)
+			}
+			resRows.Close()
+		}
+		pet.Laboratorios = append(pet.Laboratorios, l)
 	}
 
 	// 8. Imagenes

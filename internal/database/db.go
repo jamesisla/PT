@@ -36,9 +36,9 @@ func InitDB(dbPath string) (*sql.DB, error) {
 		return nil, fmt.Errorf("failed to open sqlite db: %w", err)
 	}
 
-	// Recommended connection pool settings for SQLite
-	db.SetMaxOpenConns(1) // Single writer for SQLite concurrency safety
-	db.SetMaxIdleConns(1)
+	// Recommended connection pool settings for SQLite WAL mode
+	db.SetMaxOpenConns(25)
+	db.SetMaxIdleConns(10)
 
 	if err := db.Ping(); err != nil {
 		return nil, fmt.Errorf("failed to ping sqlite db: %w", err)
