@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { BASE_URL } from '../services/api';
 
 export interface User {
   id: string;
@@ -54,7 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, pass: string) => {
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch(`${BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password: pass })
@@ -63,7 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!contentType.includes('application/json')) {
         return { 
           success: false, 
-          error: 'El backend aún no tiene activo el módulo de autenticación. Por favor ejecuta "./deploy.sh" o recompila Go en el servidor.' 
+          error: 'El backend no respondió con JSON válido. Verifica que el binario de Go esté compilado y corriendo en el servidor.' 
         };
       }
       const data = await res.json();
@@ -81,7 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const register = async (inputData: { email: string; password: string; nombre: string; telefono?: string; rut?: string; rol?: string }) => {
     try {
-      const res = await fetch('/api/auth/register', {
+      const res = await fetch(`${BASE_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(inputData)
@@ -90,7 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!contentType.includes('application/json')) {
         return { 
           success: false, 
-          error: 'El backend aún no tiene activo el módulo de autenticación. Por favor ejecuta "./deploy.sh" o recompila Go en el servidor.' 
+          error: 'El backend no respondió con JSON válido. Verifica que el binario de Go esté compilado y corriendo en el servidor.' 
         };
       }
       const data = await res.json();
@@ -108,7 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await fetch(`${BASE_URL}/auth/logout`, { method: 'POST' });
     } catch (err) {
       // Ignore network failure on logout
     }

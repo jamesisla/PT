@@ -1,7 +1,7 @@
 import { Pet, petsDatabase, savePetsDatabase } from '../data/petData';
 import { Place, LostPet, getLocalPlaces, saveLocalPlaces, getLocalLostPets, saveLocalLostPets } from '../data/mapData';
 
-const BASE_URL = typeof window !== 'undefined' 
+export const BASE_URL = typeof window !== 'undefined' 
   ? (window.location.port === '5173' ? `http://${window.location.hostname}:8080/api` : '/api')
   : '/api';
 
