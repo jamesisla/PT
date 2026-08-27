@@ -62,9 +62,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       const contentType = res.headers.get('content-type') || '';
       if (!contentType.includes('application/json')) {
+        const rawText = await res.text();
+        console.error('Non-JSON response from /api/auth/login:', res.status, rawText);
+        if (res.status === 502 || res.status === 503 || res.status === 504) {
+          return { 
+            success: false, 
+            error: `Error ${res.status}: El proceso Go (saniapet) está detenido. Ejecuta 'sudo rc-service saniapet restart' en Alpine.` 
+          };
+        }
         return { 
           success: false, 
-          error: 'El backend no respondió con JSON válido. Verifica que el binario de Go esté compilado y corriendo en el servidor.' 
+          error: `Error HTTP ${res.status}: El servidor respondió HTML en lugar de la API. Verifica Nginx y reinicia saniapet.` 
         };
       }
       const data = await res.json();
@@ -89,9 +97,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       const contentType = res.headers.get('content-type') || '';
       if (!contentType.includes('application/json')) {
+        const rawText = await res.text();
+        console.error('Non-JSON response from /api/auth/register:', res.status, rawText);
+        if (res.status === 502 || res.status === 503 || res.status === 504) {
+          return { 
+            success: false, 
+            error: `Error ${res.status}: El proceso Go (saniapet) está detenido. Ejecuta 'sudo rc-service saniapet restart' en Alpine.` 
+          };
+        }
         return { 
           success: false, 
-          error: 'El backend no respondió con JSON válido. Verifica que el binario de Go esté compilado y corriendo en el servidor.' 
+          error: `Error HTTP ${res.status}: El servidor respondió HTML en lugar de la API. Verifica Nginx y reinicia saniapet.` 
         };
       }
       const data = await res.json();

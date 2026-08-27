@@ -25,6 +25,74 @@ import (
 //go:embed all:dist
 var distFS embed.FS
 
+func createAPIRouter() chi.Router {
+	api := chi.NewRouter()
+
+	api.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(`{"status":"Sania Pet Modular Go API running","version":"2.0.0"}`))
+	})
+
+	// Domain 1: Auth & User Profiles
+	api.Mount("/auth", auth.Routes())
+
+	// Domain 2: SuperAdmin Management Portal
+	api.Mount("/admin", admin.Routes())
+	api.Mount("/admin/analytics", analytics.Routes())
+	api.Mount("/admin/backups", backups.Routes())
+
+	// Domain 3: Pets & Clinical Records
+	api.Get("/pets", handlers.ListPets)
+	api.Post("/pets", handlers.CreatePet)
+	api.Get("/pets/{pet_id}", handlers.GetPetDetail)
+	api.Put("/pets/{pet_id}/perfil", handlers.UpdatePetProfile)
+	api.Put("/pets/{pet_id}/propietario", handlers.UpdatePetOwner)
+
+	api.Post("/pets/{pet_id}/sintomas", handlers.AddSymptom)
+	api.Put("/pets/{pet_id}/sintomas/{id}", handlers.UpdateSymptom)
+	api.Delete("/pets/{pet_id}/sintomas/{id}", handlers.DeleteSymptom)
+
+	api.Post("/pets/{pet_id}/peso", handlers.AddWeight)
+
+	api.Post("/pets/{pet_id}/vacunas", handlers.AddVaccine)
+	api.Put("/pets/{pet_id}/vacunas/{id}", handlers.UpdateVaccine)
+	api.Delete("/pets/{pet_id}/vacunas/{id}", handlers.DeleteVaccine)
+
+	api.Post("/pets/{pet_id}/alertas", handlers.AddAlert)
+	api.Post("/alertas/{id}/action", handlers.HandleAlertAction)
+
+	api.Post("/pets/{pet_id}/diagnosticos", handlers.AddDiagnosis)
+	api.Put("/pets/{pet_id}/diagnosticos/{id}", handlers.UpdateDiagnosis)
+	api.Delete("/pets/{pet_id}/diagnosticos/{id}", handlers.DeleteDiagnosis)
+
+	api.Post("/pets/{pet_id}/desparasitaciones", handlers.AddDeworming)
+	api.Put("/pets/{pet_id}/desparasitaciones/{id}", handlers.UpdateDeworming)
+	api.Delete("/pets/{pet_id}/desparasitaciones/{id}", handlers.DeleteDeworming)
+
+	api.Post("/pets/{pet_id}/medicamentos", handlers.AddMedication)
+	api.Put("/pets/{pet_id}/medicamentos/{id}", handlers.UpdateMedication)
+	api.Delete("/pets/{pet_id}/medicamentos/{id}", handlers.DeleteMedication)
+
+	api.Post("/pets/{pet_id}/laboratorios", handlers.AddLaboratory)
+	api.Put("/pets/{pet_id}/laboratorios/{id}", handlers.UpdateLaboratory)
+	api.Delete("/pets/{pet_id}/laboratorios/{id}", handlers.DeleteLaboratory)
+
+	api.Post("/pets/{pet_id}/imagenes", handlers.AddMedicalImage)
+	api.Put("/pets/{pet_id}/imagenes/{id}", handlers.UpdateMedicalImage)
+	api.Delete("/pets/{pet_id}/imagenes/{id}", handlers.DeleteMedicalImage)
+
+	// Domain 4: Map Services & SOS Lost Pet Radar
+	api.Get("/servicios", handlers.ListServicios)
+	api.Post("/servicios", handlers.CreateServicio)
+
+	api.Get("/mascotas-perdidas", handlers.ListMascotasPerdidas)
+	api.Post("/mascotas-perdidas", handlers.ReportMascotaPerdida)
+	api.Patch("/mascotas-perdidas/{id}/estado", handlers.UpdateEstadoMascotaPerdida)
+	api.Delete("/mascotas-perdidas/{id}", handlers.DeleteMascotaPerdida)
+
+	return api
+}
+
 func main() {
 	log.Println("==================================================")
 	log.Println("🐾 Iniciando Sania Pet - Servidor Modular Go + SQLite")
@@ -67,70 +135,11 @@ func main() {
 	r.Use(coreMiddleware.Authenticate)
 	r.Use(analytics.Middleware)
 
-	// 3. Mount Domain Modules
-	r.Route("/api", func(api chi.Router) {
-		api.Get("/", func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(`{"status":"Sania Pet Modular Go API running","version":"2.0.0"}`))
-		})
-
-		// Domain 1: Auth & User Profiles
-		api.Mount("/auth", auth.Routes())
-
-		// Domain 2: SuperAdmin Management Portal
-		api.Mount("/admin", admin.Routes())
-		api.Mount("/admin/analytics", analytics.Routes())
-		api.Mount("/admin/backups", backups.Routes())
-
-		// Domain 3: Pets & Clinical Records
-		api.Get("/pets", handlers.ListPets)
-		api.Post("/pets", handlers.CreatePet)
-		api.Get("/pets/{pet_id}", handlers.GetPetDetail)
-		api.Put("/pets/{pet_id}/perfil", handlers.UpdatePetProfile)
-		api.Put("/pets/{pet_id}/propietario", handlers.UpdatePetOwner)
-
-		api.Post("/pets/{pet_id}/sintomas", handlers.AddSymptom)
-		api.Put("/pets/{pet_id}/sintomas/{id}", handlers.UpdateSymptom)
-		api.Delete("/pets/{pet_id}/sintomas/{id}", handlers.DeleteSymptom)
-
-		api.Post("/pets/{pet_id}/peso", handlers.AddWeight)
-
-		api.Post("/pets/{pet_id}/vacunas", handlers.AddVaccine)
-		api.Put("/pets/{pet_id}/vacunas/{id}", handlers.UpdateVaccine)
-		api.Delete("/pets/{pet_id}/vacunas/{id}", handlers.DeleteVaccine)
-
-		api.Post("/pets/{pet_id}/alertas", handlers.AddAlert)
-		api.Post("/alertas/{id}/action", handlers.HandleAlertAction)
-
-		api.Post("/pets/{pet_id}/diagnosticos", handlers.AddDiagnosis)
-		api.Put("/pets/{pet_id}/diagnosticos/{id}", handlers.UpdateDiagnosis)
-		api.Delete("/pets/{pet_id}/diagnosticos/{id}", handlers.DeleteDiagnosis)
-
-		api.Post("/pets/{pet_id}/desparasitaciones", handlers.AddDeworming)
-		api.Put("/pets/{pet_id}/desparasitaciones/{id}", handlers.UpdateDeworming)
-		api.Delete("/pets/{pet_id}/desparasitaciones/{id}", handlers.DeleteDeworming)
-
-		api.Post("/pets/{pet_id}/medicamentos", handlers.AddMedication)
-		api.Put("/pets/{pet_id}/medicamentos/{id}", handlers.UpdateMedication)
-		api.Delete("/pets/{pet_id}/medicamentos/{id}", handlers.DeleteMedication)
-
-		api.Post("/pets/{pet_id}/laboratorios", handlers.AddLaboratory)
-		api.Put("/pets/{pet_id}/laboratorios/{id}", handlers.UpdateLaboratory)
-		api.Delete("/pets/{pet_id}/laboratorios/{id}", handlers.DeleteLaboratory)
-
-		api.Post("/pets/{pet_id}/imagenes", handlers.AddMedicalImage)
-		api.Put("/pets/{pet_id}/imagenes/{id}", handlers.UpdateMedicalImage)
-		api.Delete("/pets/{pet_id}/imagenes/{id}", handlers.DeleteMedicalImage)
-
-		// Domain 4: Map Services & SOS Lost Pet Radar
-		api.Get("/servicios", handlers.ListServicios)
-		api.Post("/servicios", handlers.CreateServicio)
-
-		api.Get("/mascotas-perdidas", handlers.ListMascotasPerdidas)
-		api.Post("/mascotas-perdidas", handlers.ReportMascotaPerdida)
-		api.Patch("/mascotas-perdidas/{id}/estado", handlers.UpdateEstadoMascotaPerdida)
-		api.Delete("/mascotas-perdidas/{id}", handlers.DeleteMascotaPerdida)
-	})
+	// 3. Mount Domain Modules at /api and also root aliases for flexible reverse proxies
+	apiRouter := createAPIRouter()
+	r.Mount("/api", apiRouter)
+	r.Mount("/auth", auth.Routes())
+	r.Mount("/admin", admin.Routes())
 
 	// 4. Serve Embedded React Frontend SPA
 	distSubFS, err := fs.Sub(distFS, "dist")
@@ -138,10 +147,20 @@ func main() {
 		log.Printf("Warning: error accessing embedded dist directory: %v", err)
 	} else {
 		fileServer := http.FileServer(http.FS(distSubFS))
-		r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
+
+		// Handle static files and SPA fallback
+		r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 			path := strings.TrimPrefix(r.URL.Path, "/")
 			if path != "" {
-				// Serve static assets from embedded FS with immutable 1-year cache
+				// If request is targeting an API route that does not exist, return JSON 404
+				if strings.HasPrefix(path, "api/") || strings.HasPrefix(path, "auth/") || strings.HasPrefix(path, "admin/") {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusNotFound)
+					w.Write([]byte(`{"error":"Ruta de API no encontrada"}`))
+					return
+				}
+
+				// Check if the file exists in embedded dist static assets
 				if f, err := distSubFS.Open(path); err == nil {
 					f.Close()
 					if strings.HasPrefix(path, "assets/") {
@@ -151,6 +170,15 @@ func main() {
 					return
 				}
 			}
+
+			// If method is not GET/HEAD, do not serve HTML SPA fallback
+			if r.Method != http.MethodGet && r.Method != http.MethodHead {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusNotFound)
+				w.Write([]byte(`{"error":"Método no soportado para esta ruta"}`))
+				return
+			}
+
 			// Fallback to index.html for SPA client-side routing (no-cache for instant updates)
 			indexData, err := fs.ReadFile(distSubFS, "index.html")
 			if err != nil {
