@@ -1,5 +1,5 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
-import { Pet } from './data/petData';
+import { Pet, petsDatabase } from './data/petData';
 import { 
   getPetsList, 
   getPetDetail, 
@@ -60,48 +60,31 @@ const AdminPortal = lazy(() => import('./components/AdminPortal'));
 
 function AppContent() {
   const { user, isAuthenticated, isAdmin, openAuthModal, logout } = useAuth();
-  const [petsList, setPetsList] = useState<any[]>([]);
+  const [petsList, setPetsList] = useState<any[]>(() => Object.values(petsDatabase));
   const [activePetId, setActivePetId] = useState('luna');
-  const [activePet, setActivePet] = useState<Pet | null>(null);
+  const [activePet, setActivePet] = useState<Pet>(() => petsDatabase['luna'] || Object.values(petsDatabase)[0]);
   const [activeTab, setActiveTab] = useState('home');
   const [activeScreen, setActiveScreen] = useState<string | null>(null);
   const [selectedLabId, setSelectedLabId] = useState<string | null>(null);
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [showAddPetModal, setShowAddPetModal] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [selectedAlertForAction, setSelectedAlertForAction] = useState<any | null>(null);
 
-  // Load summary pet list on mount
+  // Background non-blocking sync with Go SQLite backend
   useEffect(() => {
-    async function loadPets() {
+    async function syncBackend() {
       try {
-        const list = await getPetsList();
-        setPetsList(list);
-        if (list.length > 0) {
-          const defaultPet = list.find(p => p.id === 'luna') || list[0];
-          setActivePetId(defaultPet.id);
-        }
+        const [list, detail] = await Promise.all([
+          getPetsList(),
+          getPetDetail(activePetId)
+        ]);
+        if (list && list.length > 0) setPetsList(list);
+        if (detail && detail.id) setActivePet(detail);
       } catch (err) {
-        console.error('Error loading pet list', err);
+        console.warn('Backend sync in background:', err);
       }
     }
-    loadPets();
-  }, []);
-
-  // Fetch full details of the active pet when it changes
-  useEffect(() => {
-    async function loadActivePet() {
-      setLoading(true);
-      try {
-        const detail = await getPetDetail(activePetId);
-        setActivePet(detail);
-      } catch (err) {
-        console.error('Error loading pet detail', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadActivePet();
+    syncBackend();
   }, [activePetId]);
 
   const handleNavigate = (screen: string) => {
@@ -278,18 +261,6 @@ function AppContent() {
     const updated = await updateAlertAction(activePet.id, id, action);
     setActivePet(updated);
   };
-
-  if (loading && !activePet) {
-    return (
-      <div className="w-full min-h-screen bg-slate-900 flex flex-col items-center justify-center text-white">
-        <div className="w-12 h-12 border-4 border-[#00AEEF] border-t-transparent rounded-full animate-spin mb-4" />
-        <h2 className="font-black text-lg">Cargando Sania Pet...</h2>
-        <p className="text-xs text-slate-400 mt-1">Conectando a base de datos ultrarrápida Go</p>
-      </div>
-    );
-  }
-
-  if (!activePet) return null;
 
   // Active Screen / View Router
   const renderContent = () => {
@@ -725,7 +696,7 @@ function AppContent() {
         </div>
 
         {/* Desktop Top Header Bar */}
-        <div className="hidden md:flex items-center justify-between px-8 py-4 bg-white border-b border-gray-200/80 sticky top-0 z-20">
+        <div className="hidden md:flex items-center justify-between px-8 py-4 bg-white border-b border-gray-200/80 sticky top-0 z-20 shadow-xs">
           <div className="flex items-center gap-3">
             <h2 className="text-xl font-black text-gray-900 capitalize">
               {activeScreen ? activeScreen.replace('-', ' ') : activeTab === 'home' ? 'Panel General' : activeTab}
@@ -734,23 +705,44 @@ function AppContent() {
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Prominent Desktop + Agregar Registro Button */}
+            <button
+              onClick={() => setShowAddMenu(true)}
+              className="px-4 py-2 bg-[#00AEEF] hover:bg-[#0099D6] active:scale-95 text-white rounded-xl text-xs font-black shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
+              title="Registrar consulta, vacuna, desparasitación, lab, etc."
+            >
+              <Plus className="w-4 h-4 stroke-[3]" />
+              <span>+ Agregar Registro</span>
+            </button>
+
             {isAdmin && (
               <button
                 onClick={() => setActiveScreen('admin-portal')}
-                className="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-xl text-xs font-black border border-purple-200 flex items-center gap-1.5 transition-colors"
+                className="px-3 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-xl text-xs font-black border border-purple-200 flex items-center gap-1.5 transition-colors"
               >
                 <Shield className="w-3.5 h-3.5" />
                 <span>Panel SuperAdmin</span>
               </button>
             )}
 
-            {!isAuthenticated && (
+            {!isAuthenticated ? (
               <button
                 onClick={() => openAuthModal('login')}
-                className="px-4 py-1.5 bg-[#00AEEF] hover:bg-[#0099D6] text-white rounded-xl text-xs font-black transition-colors"
+                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-black transition-colors"
               >
                 Ingresar
               </button>
+            ) : (
+              <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-xl">
+                <span className="text-xs font-bold text-gray-700">{user?.nombre || user?.email}</span>
+                <button
+                  onClick={() => logout()}
+                  className="text-gray-400 hover:text-red-600 transition-colors p-0.5"
+                  title="Cerrar sesión"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -759,6 +751,16 @@ function AppContent() {
         <div className="flex-1 flex flex-col">
           {renderContent()}
         </div>
+
+        {/* Desktop Floating Action Button (Quick Add) */}
+        <button
+          onClick={() => setShowAddMenu(true)}
+          className="hidden md:flex fixed bottom-8 right-8 z-40 bg-[#00AEEF] hover:bg-[#0099D6] active:scale-90 text-white px-5 py-3.5 rounded-full shadow-2xl items-center gap-2 font-black text-xs transition-all hover:shadow-cyan-500/30 cursor-pointer"
+          title="Agregar nuevo registro clínico o alerta"
+        >
+          <Plus className="w-5 h-5 stroke-[3]" />
+          <span>+ Nuevo Registro</span>
+        </button>
 
         {/* Mobile Bottom Navigation (Hidden on Desktop) */}
         <div className="block md:hidden">
