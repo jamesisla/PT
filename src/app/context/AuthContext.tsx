@@ -59,16 +59,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password: pass })
       });
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        return { 
+          success: false, 
+          error: 'El backend aún no tiene activo el módulo de autenticación. Por favor ejecuta "./deploy.sh" o recompila Go en el servidor.' 
+        };
+      }
       const data = await res.json();
       if (!res.ok) {
-        return { success: false, error: data.error || 'Error al iniciar sesión' };
+        return { success: false, error: data.error || 'Credenciales inválidas' };
       }
       setUser(data.user);
       setToken(data.token);
       setIsAuthModalOpen(false);
       return { success: true };
     } catch (err: any) {
-      return { success: false, error: err.message || 'Error de conexión' };
+      return { success: false, error: err.message || 'Error de conexión con el servidor' };
     }
   };
 
@@ -79,6 +86,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(inputData)
       });
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        return { 
+          success: false, 
+          error: 'El backend aún no tiene activo el módulo de autenticación. Por favor ejecuta "./deploy.sh" o recompila Go en el servidor.' 
+        };
+      }
       const data = await res.json();
       if (!res.ok) {
         return { success: false, error: data.error || 'Error al registrarse' };
@@ -88,7 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsAuthModalOpen(false);
       return { success: true };
     } catch (err: any) {
-      return { success: false, error: err.message || 'Error de conexión' };
+      return { success: false, error: err.message || 'Error de conexión con el servidor' };
     }
   };
 

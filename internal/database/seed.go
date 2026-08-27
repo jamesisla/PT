@@ -8,42 +8,49 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// AutoSeedIfEmpty populates initial demo pets, places, and lost pets if table is empty
+// AutoSeedIfEmpty populates initial demo users, pets, places, and lost pets if tables are empty
 func AutoSeedIfEmpty(db *sql.DB) error {
-	var count int
-	err := db.QueryRow("SELECT COUNT(*) FROM mascotas").Scan(&count)
+	// 0. Seed Default Users if usuarios is empty
+	var userCount int
+	_ = db.QueryRow("SELECT COUNT(*) FROM usuarios").Scan(&userCount)
+	if userCount == 0 {
+		now := time.Now().Format("2006-01-02 15:04:05")
+		adminHash, _ := bcrypt.GenerateFromPassword([]byte("Admin2026!"), bcrypt.DefaultCost)
+		userHash, _ := bcrypt.GenerateFromPassword([]byte("Jota2026!"), bcrypt.DefaultCost)
+		vetHash, _ := bcrypt.GenerateFromPassword([]byte("Vet2026!"), bcrypt.DefaultCost)
+
+		_, err := db.Exec(`
+			INSERT OR IGNORE INTO usuarios (id, email, password_hash, nombre, telefono, rut, rol, estado, created_at)
+			VALUES 
+			('usr-admin', 'admin@saniapet.cl', ?, 'Administrador General', '+56 9 1122 3344', '1.111.111-1', 'superadmin', 'activo', ?),
+			('usr-jota', 'jota@saniapet.cl', ?, 'Jota Robles', '+56 9 8765 4321', '17.654.321-K', 'propietario', 'activo', ?),
+			('usr-sandra', 'vet.sandra@saniapet.cl', ?, 'Dra. Sandra Valenzuela', '+56 9 5566 7788', '15.432.198-7', 'veterinario', 'activo', ?)
+		`, string(adminHash), now, string(userHash), now, string(vetHash), now)
+		if err == nil {
+			log.Println("Default users seeded successfully (admin, jota, vet.sandra)")
+		}
+	}
+
+	// Default Analytics Config
+	_, _ = db.Exec("INSERT OR IGNORE INTO analytics_config (key, value) VALUES ('tracking_enabled', '1')")
+
+	var petCount int
+	err := db.QueryRow("SELECT COUNT(*) FROM mascotas").Scan(&petCount)
 	if err != nil {
 		return err
 	}
 
-	if count > 0 {
-		return nil // Already populated
+	if petCount > 0 {
+		return nil // Pets already populated
 	}
 
-	log.Println("Empty database detected. Seeding initial users, pet records, places, and SOS lost pets...")
+	log.Println("Empty database detected. Seeding initial pet records, places, and SOS lost pets...")
 
 	tx, err := db.Begin()
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
-
-	// 0. Default Users
-	now := time.Now().Format("2006-01-02 15:04:05")
-	adminHash, _ := bcrypt.GenerateFromPassword([]byte("Admin2026!"), bcrypt.DefaultCost)
-	userHash, _ := bcrypt.GenerateFromPassword([]byte("Jota2026!"), bcrypt.DefaultCost)
-	vetHash, _ := bcrypt.GenerateFromPassword([]byte("Vet2026!"), bcrypt.DefaultCost)
-
-	_, _ = tx.Exec(`
-		INSERT INTO usuarios (id, email, password_hash, nombre, telefono, rut, rol, estado, created_at)
-		VALUES 
-		('usr-admin', 'admin@saniapet.cl', ?, 'Administrador General', '+56 9 1122 3344', '1.111.111-1', 'superadmin', 'activo', ?),
-		('usr-jota', 'jota@saniapet.cl', ?, 'Jota Robles', '+56 9 8765 4321', '17.654.321-K', 'propietario', 'activo', ?),
-		('usr-sandra', 'vet.sandra@saniapet.cl', ?, 'Dra. Sandra Valenzuela', '+56 9 5566 7788', '15.432.198-7', 'veterinario', 'activo', ?)
-	`, string(adminHash), now, string(userHash), now, string(vetHash), now)
-
-	// Default Analytics Config
-	_, _ = tx.Exec("INSERT OR IGNORE INTO analytics_config (key, value) VALUES ('tracking_enabled', '1')")
 
 	// 1. Insert Luna (Beagle)
 	_, err = tx.Exec(`
